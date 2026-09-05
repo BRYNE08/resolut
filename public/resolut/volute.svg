@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="760" viewBox="0 0 600 760">
+<defs>
+  <radialGradient id="bg" cx="50%" cy="40%" r="80%">
+    <stop offset="0%" stop-color="#1a1a18"/><stop offset="100%" stop-color="#050504"/>
+  </radialGradient>
+  <radialGradient id="body" cx="42%" cy="38%" r="75%">
+    <stop offset="0%" stop-color="rgb(255,228,158)"/>
+    <stop offset="55%" stop-color="rgb(248,206,124)"/>
+    <stop offset="100%" stop-color="rgb(122,92,50)"/>
+  </radialGradient>
+  <radialGradient id="halo" cx="50%" cy="45%" r="55%">
+    <stop offset="0%" stop-color="rgba(255,220,140,0.45)"/>
+    <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+  </radialGradient>
+</defs>
+<rect width="600" height="760" fill="url(#bg)"/>
+<rect width="600" height="760" fill="url(#halo)"/>
+<ellipse cx="300" cy="660" rx="215" ry="26" fill="rgba(255,220,140,0.10)"/>
+<ellipse cx="300" cy="340.0" rx="210" ry="140.0" fill="url(#body)"/>
+<clipPath id="clip"><ellipse cx="300" cy="340.0" rx="210" ry="140.0"/></clipPath>
+<g clip-path="url(#clip)">
+<path d="M -156 520 C -116 380.0, 44 300.0, 84 160" fill="none" stroke="rgba(80,45,10,0.20)" stroke-width="7"/>
+<path d="M -148 520 C -108 380.0, 52 300.0, 92 160" fill="none" stroke="rgba(255,240,200,0.10)" stroke-width="2.5"/>
+<path d="M -130 520 C -90 380.0, 70 300.0, 110 160" fill="none" stroke="rgba(80,45,10,0.24)" stroke-width="7"/>
+<path d="M -122 520 C -82 380.0, 78 300.0, 118 160" fill="none" stroke="rgba(255,240,200,0.12)" stroke-width="2.5"/>
+<path d="M -104 520 C -64 380.0, 96 300.0, 136 160" fill="none" stroke="rgba(80,45,10,0.27)" stroke-width="7"/>
+<path d="M -96 520 C -56 380.0, 104 300.0, 144 160" fill="none" stroke="rgba(255,240,200,0.14)" stroke-width="2.5"/>
+<path d="M -78 520 C -38 380.0, 122 300.0, 162 160" fill="none" stroke="rgba(80,45,10,0.31)" stroke-width="7"/>
+<path d="M -70 520 C -30 380.0, 130 300.0, 170 160" fill="none" stroke="rgba(255,240,200,0.15)" stroke-width="2.5"/>
+<path d="M -53 520 C -13 380.0, 147 300.0, 187 160" fill="none" stroke="rgba(80,45,10,0.34)" stroke-width="7"/>
+<path d="M -45 520 C -5 380.0, 155 300.0, 195 160" fill="none" stroke="rgba(255,240,200,0.17)" stroke-width="2.5"/>
+<path d="M -27 520 C 13 380.0, 173 300.0, 213 160" fill="none" stroke="rgba(80,45,10,0.37)" stroke-width="7"/>
+<path d="M -19 520 C 21 380.0, 181 300.0, 221 160" fill="none" stroke="rgba(255,240,200,0.19)" stroke-width="2.5"/>
+<path d="M -1 520 C 39 380.0, 199 300.0, 239 160" fill="none" stroke="rgba(80,45,10,0.40)" stroke-width="7"/>
+<path d="M 7 520 C 47 380.0, 207 300.0, 247 160" fill="none" stroke="rgba(255,240,200,0.20)" stroke-width="2.5"/>
+<path d="M 25 520 C 65 380.0, 225 300.0, 265 160" fill="none" stroke="rgba(80,45,10,0.42)" stroke-width="7"/>
+<path d="M 33 520 C 73 380.0, 233 300.0, 273 160" fill="none" stroke="rgba(255,240,200,0.21)" stroke-width="2.5"/>
+<path d="M 51 520 C 91 380.0, 251 300.0, 291 160" fill="none" stroke="rgba(80,45,10,0.45)" stroke-width="7"/>
+<path d="M 59 520 C 99 380.0, 259 300.0, 299 160" fill="none" stroke="rgba(255,240,200,0.22)" stroke-width="2.5"/>
+<path d="M 77 520 C 117 380.0, 277 300.0, 317 160" fill="none" stroke="rgba(80,45,10,0.47)" stroke-width="7"/>
+<path d="M 85 520 C 125 380.0, 285 300.0, 325 160" fill="none" stroke="rgba(255,240,200,0.23)" stroke-width="2.5"/>
+<path d="M 102 520 C 142 380.0, 302 300.0, 342 160" fill="none" stroke="rgba(80,45,10,0.48)" stroke-width="7"/>
+<path d="M 110 520 C 150 380.0, 310 300.0, 350 160" fill="none" stroke="rgba(255,240,200,0.24)" stroke-width="2.5"/>
+<path d="M 128 520 C 168 380.0, 328 300.0, 368 160" fill="none" stroke="rgba(80,45,10,0.49)" stroke-width="7"/>
+<path d="M 136 520 C 176 380.0, 336 300.0, 376 160" fill="none" stroke="rgba(255,240,200,0.25)" stroke-width="2.5"/>
+<path d="M 154 520 C 194 380.0, 354 300.0, 394 160" fill="none" stroke="rgba(80,45,10,0.50)" stroke-width="7"/>
+<path d="M 162 520 C 202 380.0, 362 300.0, 402 160" fill="none" stroke="rgba(255,240,200,0.25)" stroke-width="2.5"/>
+<path d="M 180 520 C 220 380.0, 380 300.0, 420 160" fill="none" stroke="rgba(80,45,10,0.50)" stroke-width="7"/>
+<path d="M 188 520 C 228 380.0, 388 300.0, 428 160" fill="none" stroke="rgba(255,240,200,0.25)" stroke-width="2.5"/>
+<path d="M 206 520 C 246 380.0, 406 300.0, 446 160" fill="none" stroke="rgba(80,45,10,0.50)" stroke-width="7"/>
+<path d="M 214 520 C 254 380.0, 414 300.0, 454 160" fill="none" stroke="rgba(255,240,200,0.25)" stroke-width="2.5"/>
+<path d="M 232 520 C 272 380.0, 432 300.0, 472 160" fill="none" stroke="rgba(80,45,10,0.49)" stroke-width="7"/>
+<path d="M 240 520 C 280 380.0, 440 300.0, 480 160" fill="none" stroke="rgba(255,240,200,0.25)" stroke-width="2.5"/>
+<path d="M 258 520 C 298 380.0, 458 300.0, 498 160" fill="none" stroke="rgba(80,45,10,0.48)" stroke-width="7"/>
+<path d="M 266 520 C 306 380.0, 466 300.0, 506 160" fill="none" stroke="rgba(255,240,200,0.24)" stroke-width="2.5"/>
+<path d="M 283 520 C 323 380.0, 483 300.0, 523 160" fill="none" stroke="rgba(80,45,10,0.47)" stroke-width="7"/>
+<path d="M 291 520 C 331 380.0, 491 300.0, 531 160" fill="none" stroke="rgba(255,240,200,0.23)" stroke-width="2.5"/>
+<path d="M 309 520 C 349 380.0, 509 300.0, 549 160" fill="none" stroke="rgba(80,45,10,0.45)" stroke-width="7"/>
+<path d="M 317 520 C 357 380.0, 517 300.0, 557 160" fill="none" stroke="rgba(255,240,200,0.22)" stroke-width="2.5"/>
+<path d="M 335 520 C 375 380.0, 535 300.0, 575 160" fill="none" stroke="rgba(80,45,10,0.42)" stroke-width="7"/>
+<path d="M 343 520 C 383 380.0, 543 300.0, 583 160" fill="none" stroke="rgba(255,240,200,0.21)" stroke-width="2.5"/>
+<path d="M 361 520 C 401 380.0, 561 300.0, 601 160" fill="none" stroke="rgba(80,45,10,0.40)" stroke-width="7"/>
+<path d="M 369 520 C 409 380.0, 569 300.0, 609 160" fill="none" stroke="rgba(255,240,200,0.20)" stroke-width="2.5"/>
+<path d="M 387 520 C 427 380.0, 587 300.0, 627 160" fill="none" stroke="rgba(80,45,10,0.37)" stroke-width="7"/>
+<path d="M 395 520 C 435 380.0, 595 300.0, 635 160" fill="none" stroke="rgba(255,240,200,0.19)" stroke-width="2.5"/>
+<path d="M 413 520 C 453 380.0, 613 300.0, 653 160" fill="none" stroke="rgba(80,45,10,0.34)" stroke-width="7"/>
+<path d="M 421 520 C 461 380.0, 621 300.0, 661 160" fill="none" stroke="rgba(255,240,200,0.17)" stroke-width="2.5"/>
+<path d="M 438 520 C 478 380.0, 638 300.0, 678 160" fill="none" stroke="rgba(80,45,10,0.31)" stroke-width="7"/>
+<path d="M 446 520 C 486 380.0, 646 300.0, 686 160" fill="none" stroke="rgba(255,240,200,0.15)" stroke-width="2.5"/>
+<path d="M 464 520 C 504 380.0, 664 300.0, 704 160" fill="none" stroke="rgba(80,45,10,0.27)" stroke-width="7"/>
+<path d="M 472 520 C 512 380.0, 672 300.0, 712 160" fill="none" stroke="rgba(255,240,200,0.14)" stroke-width="2.5"/>
+<path d="M 490 520 C 530 380.0, 690 300.0, 730 160" fill="none" stroke="rgba(80,45,10,0.24)" stroke-width="7"/>
+<path d="M 498 520 C 538 380.0, 698 300.0, 738 160" fill="none" stroke="rgba(255,240,200,0.12)" stroke-width="2.5"/>
+</g>
+<ellipse cx="300" cy="218" rx="64" ry="13" fill="rgba(60,38,14,0.55)"/>
+<ellipse cx="300" cy="218" rx="64" ry="13" fill="none" stroke="rgba(255,245,225,0.4)" stroke-width="1.5"/>
+<path d="M 205 490 L 230 645 L 370 645 L 395 490 Z" fill="#171512"/>
+<path d="M 205 490 L 230 645 L 242 645 L 220 490 Z" fill="rgba(255,220,140,0.08)"/>
+<ellipse cx="300" cy="646" rx="72" ry="9" fill="#0d0c0a"/>
+</svg>
