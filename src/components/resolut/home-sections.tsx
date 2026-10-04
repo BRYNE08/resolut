@@ -65,7 +65,7 @@ function Hero() {
       <div className="hero-visual">
         <span className="hero-tag">Cornice — crafted to be seen, designed to be felt</span>
         <div className="hero-arch arch">
-          <img src="/resolut/cornice-lit.jpg" alt="A sculptural Resolut lamp casting controlled, ribbed light" />
+          <img src="https://gxtc0pztso.ufs.sh/f/hQo7Tp5UBanzgElyNvBh3c1vJg8w4ehsrSbVlPDQTzIpHtUM" alt="A sculptural Resolut lamp casting controlled, ribbed light" />
         </div>
       </div>
     </section>

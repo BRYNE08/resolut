@@ -56,11 +56,14 @@ export const startPayfastCheckout = createServerFn({ method: "POST" })
     const diagnosticId = crypto.randomUUID();
     let stage = "configuration";
     try {
-      stage = "configuration";
+      stage = "auth-secret";
       authSecret();
       let origin: string;
       try {
-        origin = checkoutOrigin(siteOrigin());
+        stage = "site-url";
+        const siteUrl = siteOrigin();
+        stage = "payfast-configuration";
+        origin = checkoutOrigin(siteUrl);
       } catch (error) {
         if (error instanceof PayfastConfigurationError) {
           return { ok: false as const, message: error.message };
