@@ -107,7 +107,7 @@ function CollectionPage() {
               <span className="eyebrow">The collection</span>
               <h1>Every piece, in one room</h1>
               <p className="pdp-intro ital">
-                {all.length} pieces · {forSale} available to order · each printed, finished and
+                {all.length} pieces · {forSale} available to order  each printed, finished and
                 wired in King Williams Town
               </p>
             </header>
