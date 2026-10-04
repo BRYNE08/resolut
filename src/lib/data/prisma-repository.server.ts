@@ -1,3 +1,5 @@
+import { ZAR } from "../money";
+import { normalizeLines, validateProducts } from "./product-availability";
 /**
  * Prisma adapter — mirrors the in-memory adapter against prisma/schema.prisma.
  * Activated automatically once DATABASE_URL is set and @prisma/client exists.
@@ -19,10 +21,11 @@ import type {
   WaitlistEntry,
 } from "./types";
 
+import { createOrderReference } from "../auth/order-access.server";
+
 type AnyPrisma = Record<string, any>;
 
-const ZAR = (n: number) => "R\u00a0" + n.toLocaleString("en-ZA");
-const rand = (cents: number) => Math.round(cents / 100);
+const rand = (cents: number) => cents / 100;
 
 const STATUS_TO_DOMAIN: Record<string, OrderStatus> = {
   AWAITING_PAYMENT: "await",
@@ -40,9 +43,9 @@ const STATUS_TO_DB: Record<OrderStatus, string> = {
   cancelled: "CANCELLED",
 };
 
-
 function toProduct(row: AnyPrisma): Product {
-  const price = row.priceCents == null ? null : rand(row.priceCents);
+  const price =
+    Number.isSafeInteger(row.priceCents) && row.priceCents > 0 ? rand(row.priceCents) : null;
   return {
     slug: row.slug,
     name: row.name,
@@ -50,6 +53,7 @@ function toProduct(row: AnyPrisma): Product {
     price,
     priceLabel: price == null ? "Coming soon" : ZAR(price),
     badge: row.badge ?? undefined,
+    images: row.images?.length ? row.images : [...new Set([row.image, row.detailImage].filter(Boolean))],
     image: row.image,
     imageAlt: row.imageAlt,
     detailImage: row.detailImage,
@@ -79,6 +83,7 @@ function toProfile(row: AnyPrisma): CustomerProfile {
 
 function toOrder(row: AnyPrisma): Order {
   return {
+    userId: row.userId ?? undefined,
     reference: row.reference,
     status: STATUS_TO_DOMAIN[row.status] ?? "await",
     customerName: row.customerName,
@@ -125,8 +130,14 @@ export function createPrismaRepository(prisma: AnyPrisma): ResolutRepository {
       if (patch.specs !== undefined) data.specs = patch.specs;
       if (patch.details !== undefined) data.details = patch.details;
 
-      if (patch.price !== undefined) data.priceCents = patch.price == null ? null : Math.round(patch.price * 100);
-      if (patch.image !== undefined && patch.image.trim()) {
+      if (patch.price !== undefined)
+        data.priceCents = patch.price == null ? null : Math.round(patch.price * 100);
+      if (patch.images !== undefined) {
+        data.images = [...new Set(patch.images.map((image) => image.trim()).filter(Boolean))];
+        data.image = data.images[0] || "/resolut/placeholder.svg";
+        data.detailImage = data.images[1] || data.image;
+      } else if (patch.image !== undefined && patch.image.trim()) {
+        data.images = [patch.image.trim()];
         data.image = patch.image.trim();
         data.detailImage = patch.image.trim();
       }
@@ -139,7 +150,18 @@ export function createPrismaRepository(prisma: AnyPrisma): ResolutRepository {
     },
 
     async deleteProduct(slug: string) {
-      await prisma.product.update({ where: { slug }, data: { published: false } });
+      await prisma.$transaction(async (tx: AnyPrisma) => {
+        // Order creation takes a shared lock on this row; serialize deletion with it.
+        await tx.$queryRaw`SELECT "id" FROM "Product" WHERE "slug" = ${slug} FOR UPDATE`;
+        const product = await tx.product.findUnique({ where: { slug }, select: { id: true } });
+        if (!product) return;
+        if (await tx.orderItem.count({ where: { productId: product.id } })) {
+          throw new Error("This piece is linked to existing orders and cannot be permanently deleted. Unpublish it to remove it from the storefront.");
+        }
+        await tx.cartItem.deleteMany({ where: { productId: product.id } });
+        // Optional production-job and waitlist links use ON DELETE SET NULL.
+        await tx.product.delete({ where: { id: product.id } });
+      });
       return { ok: true as const };
     },
 
@@ -150,7 +172,7 @@ export function createPrismaRepository(prisma: AnyPrisma): ResolutRepository {
       });
       const items: CartItems = {};
       (row?.items ?? []).forEach((item: AnyPrisma) => {
-        if (item.product?.slug && item.product.priceCents != null) {
+        if (item.product?.slug) {
           items[item.product.slug] = item.quantity;
         }
       });
@@ -158,29 +180,44 @@ export function createPrismaRepository(prisma: AnyPrisma): ResolutRepository {
     },
 
     async setCartItem(cartId: string, slug: string, quantity: number): Promise<CartItems> {
-      await prisma.cart.upsert({ where: { id: cartId }, update: {}, create: { id: cartId } });
+      if (quantity !== 0) {
+        const lines = normalizeLines([{ slug, quantity }]);
+        const products = await prisma.product.findMany({ where: { slug } });
+        validateProducts(lines, products);
+      }
       const product = await prisma.product.findUnique({ where: { slug } });
       if (!product) return this.getCart(cartId);
-      if (quantity <= 0) {
+      if (quantity === 0) {
         await prisma.cartItem.deleteMany({ where: { cartId, productId: product.id } });
       } else {
+        await prisma.cart.upsert({ where: { id: cartId }, update: {}, create: { id: cartId } });
         await prisma.cartItem.upsert({
           where: { cartId_productId: { cartId, productId: product.id } },
-          update: { quantity: Math.min(99, quantity) },
-          create: { cartId, productId: product.id, quantity: Math.min(99, quantity) },
+          update: { quantity },
+          create: { cartId, productId: product.id, quantity },
         });
       }
       return this.getCart(cartId);
     },
 
     async setCart(cartId: string, items: CartItems): Promise<CartItems> {
-      await prisma.cart.upsert({ where: { id: cartId }, update: {}, create: { id: cartId } });
-      await prisma.cartItem.deleteMany({ where: { cartId } });
-      const products = await prisma.product.findMany({ where: { slug: { in: Object.keys(items) } } });
-      const rows = products
-        .filter((p: AnyPrisma) => p.priceCents != null && (items[p.slug] ?? 0) > 0)
-        .map((p: AnyPrisma) => ({ cartId, productId: p.id, quantity: Math.min(99, Math.floor(items[p.slug]!)) }));
-      if (rows.length > 0) await prisma.cartItem.createMany({ data: rows });
+      const lines = normalizeLines(
+        Object.entries(items).map(([slug, quantity]) => ({ slug, quantity })),
+        true,
+      );
+      await prisma.$transaction(async (tx: AnyPrisma) => {
+        const products = await tx.product.findMany({
+          where: { slug: { in: lines.map((line) => line.slug) } },
+        });
+        const rows = validateProducts(lines, products).map(({ product, quantity }) => ({
+          cartId,
+          productId: (product as AnyPrisma).id,
+          quantity,
+        }));
+        await tx.cart.upsert({ where: { id: cartId }, update: {}, create: { id: cartId } });
+        await tx.cartItem.deleteMany({ where: { cartId } });
+        if (rows.length) await tx.cartItem.createMany({ data: rows });
+      });
       return this.getCart(cartId);
     },
 
@@ -197,9 +234,16 @@ export function createPrismaRepository(prisma: AnyPrisma): ResolutRepository {
       return rows.map(toOrder);
     },
 
-    async listOrdersByEmail(email: string): Promise<Order[]> {
+    async listOrdersForCustomer(userId: string, verifiedEmail?: string): Promise<Order[]> {
       const rows = await prisma.order.findMany({
-        where: { email: { equals: email, mode: "insensitive" } },
+        where: {
+          OR: [
+            { userId },
+            ...(verifiedEmail
+              ? [{ userId: null, email: { equals: verifiedEmail, mode: "insensitive" } }]
+              : []),
+          ],
+        },
         orderBy: { createdAt: "desc" },
         include: { items: { include: { product: true } } },
       });
@@ -334,8 +378,6 @@ export function createPrismaRepository(prisma: AnyPrisma): ResolutRepository {
       return { ok: true as const };
     },
 
-
-
     async listProducts() {
       const rows = await prisma.product.findMany({
         where: { published: true },
@@ -346,7 +388,7 @@ export function createPrismaRepository(prisma: AnyPrisma): ResolutRepository {
 
     async getProduct(slug) {
       const row = await prisma.product.findUnique({ where: { slug } });
-      return row ? toProduct(row) : null;
+      return row?.published ? toProduct(row) : null;
     },
 
     async createProduct(input) {
@@ -355,66 +397,87 @@ export function createPrismaRepository(prisma: AnyPrisma): ResolutRepository {
         .normalize("NFKD")
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "");
-      const slug = base || `piece-${Date.now()}`;
-      const image = input.image?.trim() || "/resolut/placeholder.svg";
-      const row = await prisma.product.create({
-        data: {
-          slug,
-          name: input.name,
-          tagline: input.tagline,
-          intro: input.intro,
-          badge: input.badge?.trim() || null,
-          body: input.body?.filter((line) => line.trim().length > 0) ?? [],
-          priceCents: input.price == null ? null : Math.round(input.price * 100),
-          image,
-          imageAlt: input.imageAlt?.trim() || `${input.name} lighting piece`,
-          detailImage: image,
-          specs: input.specs ?? [],
-          details: input.details ?? [],
-          capacity: input.capacity ?? 12,
-          readyStock: input.readyStock ?? 0,
-        },
-      });
-      return toProduct(row);
+      const slugBase = base || `piece-${Date.now()}`;
+      const images = [...new Set((input.images ?? [input.image || ""]).map((image) => image.trim()).filter(Boolean))];
+      const image = images[0] || "/resolut/placeholder.svg";
+      const data = {
+        name: input.name,
+        tagline: input.tagline,
+        intro: input.intro,
+        badge: input.badge?.trim() || null,
+        body: input.body?.filter((line) => line.trim().length > 0) ?? [],
+        priceCents: input.price == null ? null : Math.round(input.price * 100),
+        image,
+        imageAlt: input.imageAlt?.trim() || `${input.name} lighting piece`,
+        images,
+        detailImage: images[1] || image,
+        specs: input.specs ?? [],
+        details: input.details ?? [],
+        capacity: input.capacity ?? 12,
+        readyStock: input.readyStock ?? 0,
+      };
+      for (let suffix = 1; ; suffix++) {
+        const slug = suffix === 1 ? slugBase : `${slugBase}-${suffix}`;
+        // Include unpublished products: their slugs are still reserved.
+        if (await prisma.product.findUnique({ where: { slug }, select: { id: true } })) continue;
+        try {
+          const row = await prisma.product.create({ data: { ...data, slug } });
+          return toProduct(row);
+        } catch (error) {
+          // A concurrent request may have claimed this slug after the lookup.
+          // Confirm the collision so unrelated database errors still surface.
+          if (
+            typeof error !== "object" ||
+            error === null ||
+            !("code" in error) ||
+            error.code !== "P2002" ||
+            !(await prisma.product.findUnique({ where: { slug }, select: { id: true } }))
+          ) {
+            throw error;
+          }
+        }
+      }
     },
 
     async createOrder(input: CreateOrderInput) {
-      const products = await prisma.product.findMany({
-        where: { slug: { in: input.lines.map((l) => l.slug) } },
-      });
-      const items = input.lines.flatMap((line) => {
-        const product = products.find((p: AnyPrisma) => p.slug === line.slug);
-        if (!product || product.priceCents == null) return [];
-        return [
-          {
-            productId: product.id,
-            quantity: line.quantity,
-            unitPriceCents: product.priceCents,
+      const lines = normalizeLines(input.lines);
+      return prisma.$transaction(async (tx: AnyPrisma) => {
+        // Lock in stable order so publication/price edits cannot race order creation.
+        for (const slug of lines.map((line) => line.slug).sort()) {
+          await tx.$queryRaw`SELECT "id" FROM "Product" WHERE "slug" = ${slug} FOR SHARE`;
+        }
+        const products = await tx.product.findMany({
+          where: { slug: { in: lines.map((line) => line.slug) } },
+        });
+        const items = validateProducts(lines, products, true).map(({ product, quantity }) => ({
+          productId: (product as AnyPrisma).id,
+          quantity,
+          unitPriceCents: product.priceCents!,
+        }));
+        const subtotalCents = items.reduce((s, i) => s + i.unitPriceCents * i.quantity, 0);
+        const row = await tx.order.create({
+          data: {
+            reference: createOrderReference(),
+            userId: input.userId ?? null,
+            customerName: input.customerName,
+            email: input.email,
+            phone: input.phone ?? null,
+            addressLine: input.addressLine,
+            addressLine2: input.addressLine2 ?? null,
+            suburb: input.suburb ?? null,
+            city: input.city,
+            province: input.province,
+            postalCode: input.postalCode,
+            country: input.country ?? "South Africa",
+            deliveryNotes: input.deliveryNotes ?? null,
+            subtotalCents,
+            totalCents: subtotalCents,
+            items: { create: items },
           },
-        ];
+          include: { items: { include: { product: true } } },
+        });
+        return toOrder(row);
       });
-      const subtotalCents = items.reduce((s, i) => s + i.unitPriceCents * i.quantity, 0);
-      const row = await prisma.order.create({
-        data: {
-          reference: `RSL-${Date.now().toString().slice(-6)}`,
-          customerName: input.customerName,
-          email: input.email,
-          phone: input.phone ?? null,
-          addressLine: input.addressLine,
-          addressLine2: input.addressLine2 ?? null,
-          suburb: input.suburb ?? null,
-          city: input.city,
-          province: input.province,
-          postalCode: input.postalCode,
-          country: input.country ?? "South Africa",
-          deliveryNotes: input.deliveryNotes ?? null,
-          subtotalCents,
-          totalCents: subtotalCents,
-          items: { create: items },
-        },
-        include: { items: { include: { product: true } } },
-      });
-      return toOrder(row);
     },
 
     async joinWaitlist({ email, label }) {
@@ -428,8 +491,8 @@ export function createPrismaRepository(prisma: AnyPrisma): ResolutRepository {
 
     async getDashboard(): Promise<DashboardData> {
       const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      const [orderRows, products, jobs, waitlistGroups, orderCount, revenueAgg] =
-        await Promise.all([
+      const [orderRows, products, jobs, waitlistGroups, orderCount, revenueAgg] = await Promise.all(
+        [
           prisma.order.findMany({
             take: 6,
             orderBy: { createdAt: "desc" },
@@ -443,7 +506,8 @@ export function createPrismaRepository(prisma: AnyPrisma): ResolutRepository {
             _sum: { totalCents: true },
             where: { createdAt: { gte: since }, status: { not: "CANCELLED" } },
           }),
-        ]);
+        ],
+      );
 
       const revenue30 = rand(revenueAgg?._sum?.totalCents ?? 0);
       const awaiting = await prisma.order.count({ where: { status: "AWAITING_PAYMENT" } });
@@ -466,14 +530,27 @@ export function createPrismaRepository(prisma: AnyPrisma): ResolutRepository {
       yearOrders.forEach((o: AnyPrisma) => {
         const created = new Date(o.createdAt);
         const idx =
-          11 - ((now.getFullYear() - created.getFullYear()) * 12 + now.getMonth() - created.getMonth());
+          11 -
+          ((now.getFullYear() - created.getFullYear()) * 12 + now.getMonth() - created.getMonth());
         if (idx >= 0 && idx < 12) months[idx]!.value += rand(o.totalCents) / 1000;
       });
 
       return {
         kpis: [
-          { key: "Revenue · 30 days", value: ZAR(revenue30), delta: "", direction: "up", note: "last 30 days" },
-          { key: "Orders", value: String(orderCount), delta: "", direction: "up", note: `${awaiting} awaiting payment` },
+          {
+            key: "Revenue · 30 days",
+            value: ZAR(revenue30),
+            delta: "",
+            direction: "up",
+            note: "last 30 days",
+          },
+          {
+            key: "Orders",
+            value: String(orderCount),
+            delta: "",
+            direction: "up",
+            note: `${awaiting} awaiting payment`,
+          },
           {
             key: "Average order",
             value: ZAR(orderCount ? Math.round(revenue30 / Math.max(1, orderCount)) : 0),

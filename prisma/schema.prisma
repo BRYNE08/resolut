@@ -32,6 +32,7 @@ model Product {
   body        String[]
   /// Price in cents (ZAR). Null means "coming soon".
   priceCents  Int?
+  images      String[] @default([])
   image       String
   imageAlt    String
   detailImage String
@@ -186,11 +187,22 @@ model User {
   emailVerified DateTime?
   image         String?
   role          UserRole  @default(CUSTOMER)
+  passwordHash  String?
+  sessionVersion Int      @default(0)
   createdAt     DateTime  @default(now())
 
   accounts Account[]
   sessions Session[]
   orders   Order[]
+}
+
+/// Shared, expiring authentication attempt counters. Keys are HMACs, never raw IPs/emails.
+model AuthRateLimit {
+  key       String   @id
+  count     Int      @default(0)
+  expiresAt DateTime
+
+  @@index([expiresAt])
 }
 
 model Account {
@@ -230,7 +242,8 @@ model VerificationToken {
 }
 
 /// Saved contact + delivery details for a signed-in customer.
-/// Keyed by the account (session) email so the row survives contact-email edits.
+/// New rows use "customer:<userId>" in the legacy accountEmail key column.
+/// Older email-keyed rows can be read only after verifying ownership of that email.
 model CustomerProfile {
   id            String   @id @default(cuid())
   accountEmail  String   @unique

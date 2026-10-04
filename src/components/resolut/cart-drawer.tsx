@@ -40,16 +40,40 @@ export function CartDrawer() {
         onClick={() => uiStore.closeCart()}
       />
       <aside className={open ? "cart-drawer open" : "cart-drawer"} aria-label="Shopping cart">
-        <div className="cart-step" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <div
+          className="cart-step"
+          style={{ display: "flex", flexDirection: "column", height: "100%" }}
+        >
           <div className="cart-head">
             <h3>Your cart</h3>
-            <button className="cart-close" aria-label="Close cart" onClick={() => uiStore.closeCart()}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <button
+              className="cart-close"
+              aria-label="Close cart"
+              onClick={() => uiStore.closeCart()}
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M6 6l12 12M18 6L6 18" />
               </svg>
             </button>
           </div>
 
+          {data && priced.unavailableSlugs.length > 0 && (
+            <div role="alert">
+              <p>Some items are no longer available.</p>
+              <button
+                onClick={() => priced.unavailableSlugs.forEach((slug) => cartStore.remove(slug))}
+              >
+                Remove unavailable items
+              </button>
+            </div>
+          )}
           {priced.lines.length === 0 ? (
             <div className="cart-body">
               <div className="cart-empty">
@@ -104,9 +128,20 @@ export function CartDrawer() {
                   <span className="lbl">Subtotal</span>
                   <span className="amt">{ZAR(priced.subtotal)}</span>
                 </div>
-                <button className="btn btn-primary" onClick={goCheckout}>
+                <button
+                  className="btn btn-primary"
+                  onClick={goCheckout}
+                  disabled={!data || priced.unavailableSlugs.length > 0}
+                >
                   Checkout
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <path d="M3 8h10M9 4l4 4-4 4" />
                   </svg>
                 </button>

@@ -1,3 +1,4 @@
+import { RecoveryPage } from "@/components/auth/recovery-page";
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -63,7 +64,7 @@ export const Route = createFileRoute("/account")({
   }),
   // UX gate; the server function re-checks the session as the real boundary.
   beforeLoad: async ({ context, location }) => {
-    const data = await context.queryClient.ensureQueryData(sessionQuery);
+    const data = await context.queryClient.fetchQuery(sessionQuery);
     if (!data.session) {
       throw redirect({ to: "/signin", search: { redirect: location.href } });
     }
@@ -76,6 +77,8 @@ function AccountPage() {
   const queryClient = useQueryClient();
   const endSession = useServerFn(signOut);
   const { data, isPending, isError } = useQuery(myOrdersQuery);
+
+  const { data: auth } = useQuery(sessionQuery);
 
   const orders: Order[] = data?.orders ?? [];
   const viewer = data?.viewer ?? null;
@@ -121,7 +124,9 @@ function AccountPage() {
                 <tbody>
                   <tr>
                     <td>{orders.length}</td>
-                    <td>{active.filter((o) => o.status === "paid" || o.status === "making").length}</td>
+                    <td>
+                      {active.filter((o) => o.status === "paid" || o.status === "making").length}
+                    </td>
                     <td>{ZAR(spend)}</td>
                   </tr>
                 </tbody>
@@ -137,6 +142,7 @@ function AccountPage() {
             </section>
 
             <ProfileSection />
+            {auth?.session?.user.hasPassword && <RecoveryPage mode="change" />}
 
             <section className="ship-block" aria-labelledby="acc-orders">
               <h2 id="acc-orders">Order history</h2>
@@ -151,8 +157,8 @@ function AccountPage() {
               ) : orders.length === 0 ? (
                 <>
                   <p className="ship-status">
-                    No orders on this address yet. If you checked out with a different email, use the
-                    reference lookup on the shipping page.
+                    No orders linked to your account yet. If you checked out as a guest, open the
+                    private link in your order email to view that purchase.
                   </p>
                   <div className="sig-actions">
                     <Link
@@ -246,7 +252,9 @@ function ProfileSection() {
       {isPending ? (
         <p className="ship-status">Loading your details&hellip;</p>
       ) : isError ? (
-        <p className="ship-status ship-status-miss">We couldn&rsquo;t load your profile just now.</p>
+        <p className="ship-status ship-status-miss">
+          We couldn&rsquo;t load your profile just now.
+        </p>
       ) : (
         <form className="co-form" onSubmit={onSubmit} noValidate>
           <div className="field">

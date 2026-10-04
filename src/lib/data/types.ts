@@ -18,6 +18,7 @@ export type Product = {
   price: number | null;
   priceLabel: string;
   badge?: string;
+  images?: string[];
   image: string;
   imageAlt: string;
   detailImage: string;
@@ -29,7 +30,6 @@ export type Product = {
   /** false hides the piece from the storefront (studio still sees it). */
   published?: boolean;
 };
-
 
 export type OrderStatus = "await" | "paid" | "making" | "shipped" | "cancelled";
 
@@ -53,6 +53,7 @@ export type ShippingAddress = {
 
 export type Order = {
   reference: string;
+  userId?: string;
   status: OrderStatus;
   customerName: string;
   email: string;
@@ -65,6 +66,8 @@ export type Order = {
 };
 
 export type CreateOrderInput = {
+  /** Assigned by the server from the customer session, never client input. */
+  userId?: string;
   customerName: string;
   email: string;
   phone?: string;
@@ -76,7 +79,7 @@ export type CreateOrderInput = {
   postalCode: string;
   country?: string;
   deliveryNotes?: string;
-  lines: { slug: string; quantity: number }[];
+  lines: { slug: string; quantity: number; expectedUnitPriceCents: number }[];
 };
 
 export type CreateProductInput = {
@@ -86,6 +89,7 @@ export type CreateProductInput = {
   /** Rand. Null/undefined means "coming soon". */
   price?: number | null;
   badge?: string;
+  images?: string[];
   image?: string;
   imageAlt?: string;
   intro: string;
@@ -135,6 +139,7 @@ export type UpdateProductInput = {
   intro?: string;
   price?: number | null;
   badge?: string | null;
+  images?: string[];
   image?: string;
   imageAlt?: string;
   body?: string[];
@@ -144,7 +149,6 @@ export type UpdateProductInput = {
   readyStock?: number;
   published?: boolean;
 };
-
 
 export type WaitlistEntry = {
   id: string;
@@ -211,9 +215,9 @@ export interface ResolutRepository {
   clearCart(cartId: string): Promise<{ ok: true }>;
   createOrder(input: CreateOrderInput): Promise<Order>;
   listOrders(): Promise<Order[]>;
-  /** Orders belonging to one customer email — powers the customer portal. */
-  listOrdersByEmail(email: string): Promise<Order[]>;
-  /** Customer profile, keyed by the account email. Null until first saved. */
+  /** Linked orders plus unclaimed guest orders for a currently verified email. */
+  listOrdersForCustomer(userId: string, verifiedEmail?: string): Promise<Order[]>;
+  /** Opaque profile key (customer:<userId>); email keys are legacy records. */
   getProfile(accountEmail: string): Promise<CustomerProfile | null>;
   saveProfile(accountEmail: string, input: SaveProfileInput): Promise<CustomerProfile>;
   getOrder(reference: string): Promise<Order | null>;
@@ -228,4 +232,3 @@ export interface ResolutRepository {
   deleteJob(id: string): Promise<{ ok: true }>;
   getDashboard(): Promise<DashboardData>;
 }
-

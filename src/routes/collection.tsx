@@ -73,7 +73,11 @@ function CollectionPage() {
 
   const all = data.products;
   const filtered = all.filter((p) =>
-    availability === "available" ? p.price != null : availability === "soon" ? p.price == null : true,
+    availability === "available"
+      ? p.price != null && p.price > 0
+      : availability === "soon"
+        ? p.price == null || p.price <= 0
+        : true,
   );
 
   const pieces = [...filtered].sort((a, b) => {
@@ -86,90 +90,95 @@ function CollectionPage() {
     return 0;
   });
 
-  const forSale = all.filter((p) => p.price != null).length;
+  const forSale = all.filter((p) => p.price != null && p.price > 0).length;
 
   return (
     <StorefrontChrome>
       <div className="pdp-page">
         <main className="pdp coll-page">
-        <div className="wrap">
-          <nav className="pdp-crumbs" aria-label="Breadcrumb">
-            <Link to="/">Home</Link>
-            <span aria-hidden="true">/</span>
-            <span aria-current="page">Collection</span>
-          </nav>
+          <div className="wrap">
+            <nav className="pdp-crumbs" aria-label="Breadcrumb">
+              <Link to="/">Home</Link>
+              <span aria-hidden="true">/</span>
+              <span aria-current="page">Collection</span>
+            </nav>
 
-          <header className="coll-hero">
-            <span className="eyebrow">The collection</span>
-            <h1>Every piece, in one room</h1>
-            <p className="pdp-intro ital">
-              {all.length} pieces · {forSale} available to order · each printed, finished and wired in
-              Johannesburg.
-            </p>
-          </header>
+            <header className="coll-hero">
+              <span className="eyebrow">The collection</span>
+              <h1>Every piece, in one room</h1>
+              <p className="pdp-intro ital">
+                {all.length} pieces · {forSale} available to order · each printed, finished and
+                wired in Johannesburg.
+              </p>
+            </header>
 
-          <div className="coll-filters">
-            <div className="coll-chips" role="group" aria-label="Filter by availability">
-              {FILTERS.map((filter) => (
-                <button
-                  key={filter.key}
-                  type="button"
-                  className={`chip${availability === filter.key ? " is-active" : ""}`}
-                  aria-pressed={availability === filter.key}
-                  onClick={() =>
-                    navigate({ to: ".", search: (prev) => ({ ...prev, availability: filter.key }) })
+            <div className="coll-filters">
+              <div className="coll-chips" role="group" aria-label="Filter by availability">
+                {FILTERS.map((filter) => (
+                  <button
+                    key={filter.key}
+                    type="button"
+                    className={`chip${availability === filter.key ? " is-active" : ""}`}
+                    aria-pressed={availability === filter.key}
+                    onClick={() =>
+                      navigate({
+                        to: ".",
+                        search: (prev) => ({ ...prev, availability: filter.key }),
+                      })
+                    }
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+
+              <label className="coll-sort">
+                <span>Sort</span>
+                <select
+                  value={sort}
+                  onChange={(event) =>
+                    navigate({
+                      to: ".",
+                      search: (prev) => ({ ...prev, sort: event.target.value as Sort }),
+                    })
                   }
                 >
-                  {filter.label}
-                </button>
-              ))}
+                  {SORT_LABELS.map((option) => (
+                    <option key={option.key} value={option.key}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
 
-            <label className="coll-sort">
-              <span>Sort</span>
-              <select
-                value={sort}
-                onChange={(event) =>
-                  navigate({
-                    to: ".",
-                    search: (prev) => ({ ...prev, sort: event.target.value as Sort }),
-                  })
-                }
-              >
-                {SORT_LABELS.map((option) => (
-                  <option key={option.key} value={option.key}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          {pieces.length === 0 ? (
-            <p className="coll-empty">No pieces match that filter yet.</p>
-          ) : (
-            <div className="coll-grid">
-              {pieces.map((piece) => (
-                <article className="product" key={piece.slug}>
-                  <div className="frame">
-                    {piece.badge ? <span className="badge">{piece.badge}</span> : null}
-                    <div className="arch-img arch">
-                      <img src={piece.image} alt={piece.imageAlt} loading="lazy" />
+            {pieces.length === 0 ? (
+              <p className="coll-empty">No pieces match that filter yet.</p>
+            ) : (
+              <div className="coll-grid">
+                {pieces.map((piece) => (
+                  <article className="product" key={piece.slug}>
+                    <div className="frame">
+                      {piece.badge ? <span className="badge">{piece.badge}</span> : null}
+                      <div className="arch-img arch">
+                        <img src={piece.image} alt={piece.imageAlt} loading="lazy" />
+                      </div>
                     </div>
-                  </div>
-                  <Link className="card-link" to="/product/$slug" params={{ slug: piece.slug }}>
-                    <span>View details</span>
-                  </Link>
-                  <div className="meta">
-                    <h2>{piece.name}</h2>
-                    <span className={piece.price ? "price" : "price soon"}>{piece.priceLabel}</span>
-                  </div>
-                  <p className="tagline">{piece.tagline}</p>
-                </article>
-              ))}
-            </div>
-          )}
-        </div>
+                    <Link className="card-link" to="/product/$slug" params={{ slug: piece.slug }}>
+                      <span>View details</span>
+                    </Link>
+                    <div className="meta">
+                      <h2>{piece.name}</h2>
+                      <span className={piece.price ? "price" : "price soon"}>
+                        {piece.priceLabel}
+                      </span>
+                    </div>
+                    <p className="tagline">{piece.tagline}</p>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
         </main>
       </div>
     </StorefrontChrome>

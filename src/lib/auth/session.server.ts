@@ -1,70 +1,98 @@
-/**
- * Server-side session handling — an encrypted, http-only cookie.
- *
- * The cookie is sealed with AUTH_SECRET when it exists, and with a development
- * fallback key otherwise, so the flow is real either way: nobody reaches the
- * studio without signing in. Swap the three functions below for the Auth.js
- * session read/write once `@auth/core` is installed; every caller (server
- * functions, route gates, the `useSession()` hook) keeps working unchanged.
- */
 import { getSession, updateSession, clearSession } from "@tanstack/react-start/server";
-
 import type { Session, SessionUser } from "./config";
+import { authSecret } from "./secret.server";
 
-const COOKIE_NAME = "resolut_session";
-const MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
-/** Only used when AUTH_SECRET is unset — sessions reset on redeploy, by design. */
-const DEV_KEY = "resolut-development-session-key-change-me";
-
+type Audience = "customer" | "studio";
 type Stored = { user?: SessionUser; expires?: string };
+const MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
 
-function sessionConfig() {
-  const env = process.env as Record<string, string | undefined>;
+function sessionConfig(audience: Audience) {
   return {
-    name: COOKIE_NAME,
-    password: env["AUTH_SECRET"] || DEV_KEY,
+    name: `resolut_${audience}_session`,
+    sessionHeader: false as const,
+    password: authSecret(),
     maxAge: MAX_AGE_SECONDS,
     cookie: {
       httpOnly: true,
       sameSite: "lax" as const,
       path: "/",
-      secure: (env["NODE_ENV"] ?? "development") === "production",
+      secure:
+        process.env["NODE_ENV"] === "production" ||
+        (process.env["PUBLIC_SITE_URL"] || process.env["AUTH_URL"])?.startsWith("https://") ===
+          true,
     },
   };
 }
 
-export type SessionResult = {
-  session: Session;
-  /** false while the session cookie is sealed with the development key. */
-  live: boolean;
-};
+export type SessionResult = { session: Session; live: boolean };
 
-export async function readSession(): Promise<SessionResult> {
-  const env = process.env as Record<string, string | undefined>;
-  const live = Boolean(env["AUTH_SECRET"]);
-
+async function read(audience: Audience): Promise<SessionResult> {
+  const live = (process.env["AUTH_SECRET"]?.length ?? 0) >= 32;
   try {
-    const stored = await getSession<Stored>(sessionConfig());
-    const user = stored.data.user;
-    const expires = stored.data.expires;
-
-    if (!user || !expires || new Date(expires).getTime() < Date.now()) {
+    const stored = await getSession<Stored>(sessionConfig(audience));
+    const { user, expires } = stored.data;
+    if (!user || !expires || !(Date.parse(expires) > Date.now())) return { session: null, live };
+    if (audience === "studio") {
+      if (user.role !== "studio" && user.role !== "admin") return { session: null, live };
+      return { session: { user, expires }, live };
+    }
+    if (user.role !== "customer") return { session: null, live };
+    // A deleted or promoted account cannot retain a customer session until cookie expiry.
+    const { getPrisma } = await import("../data/prisma.server");
+    const db = await getPrisma();
+    if (!db) return { session: null, live };
+    const current = await db.user.findUnique({ where: { id: user.id } });
+    if (
+      !current ||
+      current.role !== "CUSTOMER" ||
+      current.email !== user.email ||
+      current.sessionVersion !== (user.sessionVersion ?? 0)
+    ) {
       return { session: null, live };
     }
-    return { session: { user, expires }, live };
+    return {
+      session: {
+        user: {
+          ...user,
+          hasPassword: Boolean(current.passwordHash),
+          name: current.name || "Customer",
+          image: current.image ?? undefined,
+          emailVerified: user.emailVerified === true && Boolean(current.emailVerified),
+        },
+        expires,
+      },
+      live,
+    };
   } catch {
-    // Tampered or stale cookie (e.g. AUTH_SECRET rotated) — treat as signed out.
     return { session: null, live };
   }
 }
 
-/** Writes the signed-in session cookie and returns the session it created. */
-export async function startSession(user: SessionUser): Promise<Session> {
+/** Customer-facing APIs never accept the independent staff session. */
+export const readSession = () => read("customer");
+export const readStudioSession = () => read("studio");
+
+async function start(user: SessionUser, audience: Audience): Promise<Session> {
   const expires = new Date(Date.now() + MAX_AGE_SECONDS * 1000).toISOString();
-  await updateSession<Stored>(sessionConfig(), { user, expires });
+  const config = sessionConfig(audience);
+  const stored = await getSession<Stored>(config);
+  // Rotate the sealed session rather than re-reading an inbound cookie after clearSession.
+  stored.id = crypto.randomUUID();
+  stored.createdAt = Date.now();
+  stored.data = {};
+  await updateSession<Stored>(config, { user, expires });
   return { user, expires };
 }
 
-export async function endSession(): Promise<void> {
-  await clearSession(sessionConfig());
+export async function startSession(user: SessionUser) {
+  if (user.role !== "customer") throw new Error("Customer session required.");
+  return start(user, "customer");
 }
+
+export async function startStudioSession(user: SessionUser) {
+  if (user.role !== "studio" && user.role !== "admin") throw new Error("Studio session required.");
+  return start(user, "studio");
+}
+
+export const endSession = () => clearSession(sessionConfig("customer"));
+export const endStudioSession = () => clearSession(sessionConfig("studio"));

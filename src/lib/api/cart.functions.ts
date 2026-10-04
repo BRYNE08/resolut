@@ -30,9 +30,7 @@ export const setCartItem = createServerFn({ method: "POST" })
 /** Merges a legacy localStorage cart into the server cart (additive). */
 export const syncCart = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z
-      .object({ items: z.record(z.string(), z.number().int().min(1).max(99)) })
-      .parse(input),
+    z.object({ items: z.record(z.string(), z.number().int().min(1).max(99)) }).parse(input),
   )
   .handler(async ({ data }) => {
     const { ensureCartId } = await import("@/lib/data/cart-session.server");
@@ -41,7 +39,7 @@ export const syncCart = createServerFn({ method: "POST" })
     const repo = await getRepository();
     const merged = await repo.getCart(cartId);
     Object.entries(data.items).forEach(([slug, qty]) => {
-      merged[slug] = Math.min(99, (merged[slug] ?? 0) + qty);
+      merged[slug] = (merged[slug] ?? 0) + qty;
     });
     return { source: repo.name, items: await repo.setCart(cartId, merged) };
   });

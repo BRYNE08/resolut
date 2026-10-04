@@ -47,6 +47,7 @@
   header.nav{
     position:fixed;top:0;left:0;right:0;z-index:100;
     display:flex;align-items:center;justify-content:space-between;
+    background:var(--forest);
     padding:18px var(--pad);
     transition:background .4s var(--ease), padding .4s var(--ease), box-shadow .4s var(--ease);
   }

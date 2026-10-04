@@ -83,6 +83,7 @@ export type ProductCountAggregateOutputType = {
   badge: number
   body: number
   priceCents: number
+  images: number
   image: number
   imageAlt: number
   detailImage: number
@@ -154,6 +155,7 @@ export type ProductCountAggregateInputType = {
   badge?: true
   body?: true
   priceCents?: true
+  images?: true
   image?: true
   imageAlt?: true
   detailImage?: true
@@ -262,6 +264,7 @@ export type ProductGroupByOutputType = {
   badge: string | null
   body: string[]
   priceCents: number | null
+  images: string[]
   image: string
   imageAlt: string
   detailImage: string
@@ -306,6 +309,7 @@ export type ProductWhereInput = {
   badge?: Prisma.StringNullableFilter<"Product"> | string | null
   body?: Prisma.StringNullableListFilter<"Product">
   priceCents?: Prisma.IntNullableFilter<"Product"> | number | null
+  images?: Prisma.StringNullableListFilter<"Product">
   image?: Prisma.StringFilter<"Product"> | string
   imageAlt?: Prisma.StringFilter<"Product"> | string
   detailImage?: Prisma.StringFilter<"Product"> | string
@@ -331,6 +335,7 @@ export type ProductOrderByWithRelationInput = {
   badge?: Prisma.SortOrderInput | Prisma.SortOrder
   body?: Prisma.SortOrder
   priceCents?: Prisma.SortOrderInput | Prisma.SortOrder
+  images?: Prisma.SortOrder
   image?: Prisma.SortOrder
   imageAlt?: Prisma.SortOrder
   detailImage?: Prisma.SortOrder
@@ -359,6 +364,7 @@ export type ProductWhereUniqueInput = Prisma.AtLeast<{
   badge?: Prisma.StringNullableFilter<"Product"> | string | null
   body?: Prisma.StringNullableListFilter<"Product">
   priceCents?: Prisma.IntNullableFilter<"Product"> | number | null
+  images?: Prisma.StringNullableListFilter<"Product">
   image?: Prisma.StringFilter<"Product"> | string
   imageAlt?: Prisma.StringFilter<"Product"> | string
   detailImage?: Prisma.StringFilter<"Product"> | string
@@ -384,6 +390,7 @@ export type ProductOrderByWithAggregationInput = {
   badge?: Prisma.SortOrderInput | Prisma.SortOrder
   body?: Prisma.SortOrder
   priceCents?: Prisma.SortOrderInput | Prisma.SortOrder
+  images?: Prisma.SortOrder
   image?: Prisma.SortOrder
   imageAlt?: Prisma.SortOrder
   detailImage?: Prisma.SortOrder
@@ -413,6 +420,7 @@ export type ProductScalarWhereWithAggregatesInput = {
   badge?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
   body?: Prisma.StringNullableListFilter<"Product">
   priceCents?: Prisma.IntNullableWithAggregatesFilter<"Product"> | number | null
+  images?: Prisma.StringNullableListFilter<"Product">
   image?: Prisma.StringWithAggregatesFilter<"Product"> | string
   imageAlt?: Prisma.StringWithAggregatesFilter<"Product"> | string
   detailImage?: Prisma.StringWithAggregatesFilter<"Product"> | string
@@ -434,6 +442,7 @@ export type ProductCreateInput = {
   badge?: string | null
   body?: Prisma.ProductCreatebodyInput | string[]
   priceCents?: number | null
+  images?: Prisma.ProductCreateimagesInput | string[]
   image: string
   imageAlt: string
   detailImage: string
@@ -459,6 +468,7 @@ export type ProductUncheckedCreateInput = {
   badge?: string | null
   body?: Prisma.ProductCreatebodyInput | string[]
   priceCents?: number | null
+  images?: Prisma.ProductCreateimagesInput | string[]
   image: string
   imageAlt: string
   detailImage: string
@@ -484,6 +494,7 @@ export type ProductUpdateInput = {
   badge?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   body?: Prisma.ProductUpdatebodyInput | string[]
   priceCents?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  images?: Prisma.ProductUpdateimagesInput | string[]
   image?: Prisma.StringFieldUpdateOperationsInput | string
   imageAlt?: Prisma.StringFieldUpdateOperationsInput | string
   detailImage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -509,6 +520,7 @@ export type ProductUncheckedUpdateInput = {
   badge?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   body?: Prisma.ProductUpdatebodyInput | string[]
   priceCents?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  images?: Prisma.ProductUpdateimagesInput | string[]
   image?: Prisma.StringFieldUpdateOperationsInput | string
   imageAlt?: Prisma.StringFieldUpdateOperationsInput | string
   detailImage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -534,6 +546,7 @@ export type ProductCreateManyInput = {
   badge?: string | null
   body?: Prisma.ProductCreatebodyInput | string[]
   priceCents?: number | null
+  images?: Prisma.ProductCreateimagesInput | string[]
   image: string
   imageAlt: string
   detailImage: string
@@ -555,6 +568,7 @@ export type ProductUpdateManyMutationInput = {
   badge?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   body?: Prisma.ProductUpdatebodyInput | string[]
   priceCents?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  images?: Prisma.ProductUpdateimagesInput | string[]
   image?: Prisma.StringFieldUpdateOperationsInput | string
   imageAlt?: Prisma.StringFieldUpdateOperationsInput | string
   detailImage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -576,6 +590,7 @@ export type ProductUncheckedUpdateManyInput = {
   badge?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   body?: Prisma.ProductUpdatebodyInput | string[]
   priceCents?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  images?: Prisma.ProductUpdateimagesInput | string[]
   image?: Prisma.StringFieldUpdateOperationsInput | string
   imageAlt?: Prisma.StringFieldUpdateOperationsInput | string
   detailImage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -605,6 +620,7 @@ export type ProductCountOrderByAggregateInput = {
   badge?: Prisma.SortOrder
   body?: Prisma.SortOrder
   priceCents?: Prisma.SortOrder
+  images?: Prisma.SortOrder
   image?: Prisma.SortOrder
   imageAlt?: Prisma.SortOrder
   detailImage?: Prisma.SortOrder
@@ -679,6 +695,10 @@ export type ProductCreatebodyInput = {
   set: string[]
 }
 
+export type ProductCreateimagesInput = {
+  set: string[]
+}
+
 export type StringFieldUpdateOperationsInput = {
   set?: string
 }
@@ -698,6 +718,11 @@ export type NullableIntFieldUpdateOperationsInput = {
   decrement?: number
   multiply?: number
   divide?: number
+}
+
+export type ProductUpdateimagesInput = {
+  set?: string[]
+  push?: string | string[]
 }
 
 export type BoolFieldUpdateOperationsInput = {
@@ -785,6 +810,7 @@ export type ProductCreateWithoutOrderItemsInput = {
   badge?: string | null
   body?: Prisma.ProductCreatebodyInput | string[]
   priceCents?: number | null
+  images?: Prisma.ProductCreateimagesInput | string[]
   image: string
   imageAlt: string
   detailImage: string
@@ -809,6 +835,7 @@ export type ProductUncheckedCreateWithoutOrderItemsInput = {
   badge?: string | null
   body?: Prisma.ProductCreatebodyInput | string[]
   priceCents?: number | null
+  images?: Prisma.ProductCreateimagesInput | string[]
   image: string
   imageAlt: string
   detailImage: string
@@ -849,6 +876,7 @@ export type ProductUpdateWithoutOrderItemsInput = {
   badge?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   body?: Prisma.ProductUpdatebodyInput | string[]
   priceCents?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  images?: Prisma.ProductUpdateimagesInput | string[]
   image?: Prisma.StringFieldUpdateOperationsInput | string
   imageAlt?: Prisma.StringFieldUpdateOperationsInput | string
   detailImage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -873,6 +901,7 @@ export type ProductUncheckedUpdateWithoutOrderItemsInput = {
   badge?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   body?: Prisma.ProductUpdatebodyInput | string[]
   priceCents?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  images?: Prisma.ProductUpdateimagesInput | string[]
   image?: Prisma.StringFieldUpdateOperationsInput | string
   imageAlt?: Prisma.StringFieldUpdateOperationsInput | string
   detailImage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -897,6 +926,7 @@ export type ProductCreateWithoutCartItemsInput = {
   badge?: string | null
   body?: Prisma.ProductCreatebodyInput | string[]
   priceCents?: number | null
+  images?: Prisma.ProductCreateimagesInput | string[]
   image: string
   imageAlt: string
   detailImage: string
@@ -921,6 +951,7 @@ export type ProductUncheckedCreateWithoutCartItemsInput = {
   badge?: string | null
   body?: Prisma.ProductCreatebodyInput | string[]
   priceCents?: number | null
+  images?: Prisma.ProductCreateimagesInput | string[]
   image: string
   imageAlt: string
   detailImage: string
@@ -961,6 +992,7 @@ export type ProductUpdateWithoutCartItemsInput = {
   badge?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   body?: Prisma.ProductUpdatebodyInput | string[]
   priceCents?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  images?: Prisma.ProductUpdateimagesInput | string[]
   image?: Prisma.StringFieldUpdateOperationsInput | string
   imageAlt?: Prisma.StringFieldUpdateOperationsInput | string
   detailImage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -985,6 +1017,7 @@ export type ProductUncheckedUpdateWithoutCartItemsInput = {
   badge?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   body?: Prisma.ProductUpdatebodyInput | string[]
   priceCents?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  images?: Prisma.ProductUpdateimagesInput | string[]
   image?: Prisma.StringFieldUpdateOperationsInput | string
   imageAlt?: Prisma.StringFieldUpdateOperationsInput | string
   detailImage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1009,6 +1042,7 @@ export type ProductCreateWithoutProductionJobsInput = {
   badge?: string | null
   body?: Prisma.ProductCreatebodyInput | string[]
   priceCents?: number | null
+  images?: Prisma.ProductCreateimagesInput | string[]
   image: string
   imageAlt: string
   detailImage: string
@@ -1033,6 +1067,7 @@ export type ProductUncheckedCreateWithoutProductionJobsInput = {
   badge?: string | null
   body?: Prisma.ProductCreatebodyInput | string[]
   priceCents?: number | null
+  images?: Prisma.ProductCreateimagesInput | string[]
   image: string
   imageAlt: string
   detailImage: string
@@ -1073,6 +1108,7 @@ export type ProductUpdateWithoutProductionJobsInput = {
   badge?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   body?: Prisma.ProductUpdatebodyInput | string[]
   priceCents?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  images?: Prisma.ProductUpdateimagesInput | string[]
   image?: Prisma.StringFieldUpdateOperationsInput | string
   imageAlt?: Prisma.StringFieldUpdateOperationsInput | string
   detailImage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1097,6 +1133,7 @@ export type ProductUncheckedUpdateWithoutProductionJobsInput = {
   badge?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   body?: Prisma.ProductUpdatebodyInput | string[]
   priceCents?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  images?: Prisma.ProductUpdateimagesInput | string[]
   image?: Prisma.StringFieldUpdateOperationsInput | string
   imageAlt?: Prisma.StringFieldUpdateOperationsInput | string
   detailImage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1121,6 +1158,7 @@ export type ProductCreateWithoutWaitlistEntriesInput = {
   badge?: string | null
   body?: Prisma.ProductCreatebodyInput | string[]
   priceCents?: number | null
+  images?: Prisma.ProductCreateimagesInput | string[]
   image: string
   imageAlt: string
   detailImage: string
@@ -1145,6 +1183,7 @@ export type ProductUncheckedCreateWithoutWaitlistEntriesInput = {
   badge?: string | null
   body?: Prisma.ProductCreatebodyInput | string[]
   priceCents?: number | null
+  images?: Prisma.ProductCreateimagesInput | string[]
   image: string
   imageAlt: string
   detailImage: string
@@ -1185,6 +1224,7 @@ export type ProductUpdateWithoutWaitlistEntriesInput = {
   badge?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   body?: Prisma.ProductUpdatebodyInput | string[]
   priceCents?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  images?: Prisma.ProductUpdateimagesInput | string[]
   image?: Prisma.StringFieldUpdateOperationsInput | string
   imageAlt?: Prisma.StringFieldUpdateOperationsInput | string
   detailImage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1209,6 +1249,7 @@ export type ProductUncheckedUpdateWithoutWaitlistEntriesInput = {
   badge?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   body?: Prisma.ProductUpdatebodyInput | string[]
   priceCents?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  images?: Prisma.ProductUpdateimagesInput | string[]
   image?: Prisma.StringFieldUpdateOperationsInput | string
   imageAlt?: Prisma.StringFieldUpdateOperationsInput | string
   detailImage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1291,6 +1332,7 @@ export type ProductSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   badge?: boolean
   body?: boolean
   priceCents?: boolean
+  images?: boolean
   image?: boolean
   imageAlt?: boolean
   detailImage?: boolean
@@ -1317,6 +1359,7 @@ export type ProductSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   badge?: boolean
   body?: boolean
   priceCents?: boolean
+  images?: boolean
   image?: boolean
   imageAlt?: boolean
   detailImage?: boolean
@@ -1338,6 +1381,7 @@ export type ProductSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   badge?: boolean
   body?: boolean
   priceCents?: boolean
+  images?: boolean
   image?: boolean
   imageAlt?: boolean
   detailImage?: boolean
@@ -1359,6 +1403,7 @@ export type ProductSelectScalar = {
   badge?: boolean
   body?: boolean
   priceCents?: boolean
+  images?: boolean
   image?: boolean
   imageAlt?: boolean
   detailImage?: boolean
@@ -1371,7 +1416,7 @@ export type ProductSelectScalar = {
   updatedAt?: boolean
 }
 
-export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "name" | "tagline" | "intro" | "badge" | "body" | "priceCents" | "image" | "imageAlt" | "detailImage" | "specs" | "details" | "published" | "capacity" | "readyStock" | "createdAt" | "updatedAt", ExtArgs["result"]["product"]>
+export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "name" | "tagline" | "intro" | "badge" | "body" | "priceCents" | "images" | "image" | "imageAlt" | "detailImage" | "specs" | "details" | "published" | "capacity" | "readyStock" | "createdAt" | "updatedAt", ExtArgs["result"]["product"]>
 export type ProductInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   orderItems?: boolean | Prisma.Product$orderItemsArgs<ExtArgs>
   waitlistEntries?: boolean | Prisma.Product$waitlistEntriesArgs<ExtArgs>
@@ -1402,6 +1447,7 @@ export type $ProductPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
      * Price in cents (ZAR). Null means "coming soon".
      */
     priceCents: number | null
+    images: string[]
     image: string
     imageAlt: string
     detailImage: string
@@ -1850,6 +1896,7 @@ export interface ProductFieldRefs {
   readonly badge: Prisma.FieldRef<"Product", 'String'>
   readonly body: Prisma.FieldRef<"Product", 'String[]'>
   readonly priceCents: Prisma.FieldRef<"Product", 'Int'>
+  readonly images: Prisma.FieldRef<"Product", 'String[]'>
   readonly image: Prisma.FieldRef<"Product", 'String'>
   readonly imageAlt: Prisma.FieldRef<"Product", 'String'>
   readonly detailImage: Prisma.FieldRef<"Product", 'String'>

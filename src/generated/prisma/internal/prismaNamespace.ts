@@ -406,6 +406,7 @@ export const ModelName = {
   WaitlistSignup: 'WaitlistSignup',
   ContactMessage: 'ContactMessage',
   User: 'User',
+  AuthRateLimit: 'AuthRateLimit',
   Account: 'Account',
   Session: 'Session',
   VerificationToken: 'VerificationToken',
@@ -425,7 +426,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "product" | "order" | "orderItem" | "cart" | "cartItem" | "productionJob" | "waitlistSignup" | "contactMessage" | "user" | "account" | "session" | "verificationToken" | "customerProfile"
+    modelProps: "product" | "order" | "orderItem" | "cart" | "cartItem" | "productionJob" | "waitlistSignup" | "contactMessage" | "user" | "authRateLimit" | "account" | "session" | "verificationToken" | "customerProfile"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1095,6 +1096,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    AuthRateLimit: {
+      payload: Prisma.$AuthRateLimitPayload<ExtArgs>
+      fields: Prisma.AuthRateLimitFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AuthRateLimitFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthRateLimitPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AuthRateLimitFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthRateLimitPayload>
+        }
+        findFirst: {
+          args: Prisma.AuthRateLimitFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthRateLimitPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AuthRateLimitFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthRateLimitPayload>
+        }
+        findMany: {
+          args: Prisma.AuthRateLimitFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthRateLimitPayload>[]
+        }
+        create: {
+          args: Prisma.AuthRateLimitCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthRateLimitPayload>
+        }
+        createMany: {
+          args: Prisma.AuthRateLimitCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AuthRateLimitCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthRateLimitPayload>[]
+        }
+        delete: {
+          args: Prisma.AuthRateLimitDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthRateLimitPayload>
+        }
+        update: {
+          args: Prisma.AuthRateLimitUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthRateLimitPayload>
+        }
+        deleteMany: {
+          args: Prisma.AuthRateLimitDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AuthRateLimitUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AuthRateLimitUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthRateLimitPayload>[]
+        }
+        upsert: {
+          args: Prisma.AuthRateLimitUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthRateLimitPayload>
+        }
+        aggregate: {
+          args: Prisma.AuthRateLimitAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAuthRateLimit>
+        }
+        groupBy: {
+          args: Prisma.AuthRateLimitGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AuthRateLimitGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AuthRateLimitCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AuthRateLimitCountAggregateOutputType> | number
+        }
+      }
+    }
     Account: {
       payload: Prisma.$AccountPayload<ExtArgs>
       fields: Prisma.AccountFieldRefs
@@ -1439,6 +1514,7 @@ export const ProductScalarFieldEnum = {
   badge: 'badge',
   body: 'body',
   priceCents: 'priceCents',
+  images: 'images',
   image: 'image',
   imageAlt: 'imageAlt',
   detailImage: 'detailImage',
@@ -1556,10 +1632,21 @@ export const UserScalarFieldEnum = {
   emailVerified: 'emailVerified',
   image: 'image',
   role: 'role',
+  passwordHash: 'passwordHash',
+  sessionVersion: 'sessionVersion',
   createdAt: 'createdAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const AuthRateLimitScalarFieldEnum = {
+  key: 'key',
+  count: 'count',
+  expiresAt: 'expiresAt'
+} as const
+
+export type AuthRateLimitScalarFieldEnum = (typeof AuthRateLimitScalarFieldEnum)[keyof typeof AuthRateLimitScalarFieldEnum]
 
 
 export const AccountScalarFieldEnum = {
@@ -1929,6 +2016,7 @@ export type GlobalOmitConfig = {
   waitlistSignup?: Prisma.WaitlistSignupOmit
   contactMessage?: Prisma.ContactMessageOmit
   user?: Prisma.UserOmit
+  authRateLimit?: Prisma.AuthRateLimitOmit
   account?: Prisma.AccountOmit
   session?: Prisma.SessionOmit
   verificationToken?: Prisma.VerificationTokenOmit

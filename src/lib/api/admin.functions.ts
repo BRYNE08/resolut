@@ -13,16 +13,15 @@ import {
 
 /**
  * Every studio mutation goes through this guard: the route gate is UX, this is
- * the security boundary. Swap `readSession()` for the live Auth.js read and
- * nothing here changes.
+ * the security boundary. Customer OAuth sessions are never accepted here.
  */
 async function studioContext() {
-  const [{ getRepository }, { readSession }, { canAccessStudio }] = await Promise.all([
+  const [{ getRepository }, { readStudioSession }, { canAccessStudio }] = await Promise.all([
     import("@/lib/data/repository.server"),
     import("@/lib/auth/session.server"),
     import("@/lib/auth/config"),
   ]);
-  const { session, live } = await readSession();
+  const { session, live } = await readStudioSession();
   if (!canAccessStudio(session)) throw new Error("Not authorised for the studio.");
   const repo = await getRepository();
   return { repo, session: session!, live };

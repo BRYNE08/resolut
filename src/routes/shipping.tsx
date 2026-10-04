@@ -113,7 +113,8 @@ function ShippingPage() {
                   </button>
                 </div>
                 <p className="co-note">
-                  Your reference is in the confirmation email, in the format RSL-123456.
+                  Sign in with the account matching your order email to look up a reference.
+                  Guest customers: open the private order link in your latest email.
                 </p>
               </form>
 
@@ -121,8 +122,8 @@ function ShippingPage() {
                 <p className="ship-status">Looking up {reference}…</p>
               ) : reference && (isError || !order) ? (
                 <p className="ship-status ship-status-miss">
-                  We can’t find order {reference}. Check the reference, or{" "}
-                  <a href="/#contact">contact the studio</a> and we’ll trace it.
+                  This order is unavailable. Check the reference and <Link to="/signin">sign in</Link>,
+                  or use your private email link. For help, <a href="mailto:orders@resolutdesign.co.za">contact the studio</a>.
                 </p>
               ) : order ? (
                 <OrderTimeline order={order} />

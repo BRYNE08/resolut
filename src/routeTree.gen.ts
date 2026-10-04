@@ -9,8 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as ShippingRouteImport } from './routes/shipping'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as CollectionRouteImport } from './routes/collection'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
@@ -19,9 +23,21 @@ import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as OrderReferenceRouteImport } from './routes/order.$reference'
+import { Route as AdminSigninRouteImport } from './routes/admin_.signin'
 import { Route as ApiPublicPayfastItnRouteImport } from './routes/api/public/payfast-itn'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as ApiAuthCustomerProviderCallbackRouteImport } from './routes/api/auth/customer/$provider.callback'
 
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SigninRoute = SigninRouteImport.update({
   id: '/signin',
   path: '/signin',
@@ -30,6 +46,16 @@ const SigninRoute = SigninRouteImport.update({
 const ShippingRoute = ShippingRouteImport.update({
   id: '/shipping',
   path: '/shipping',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CollectionRoute = CollectionRouteImport.update({
@@ -72,6 +98,11 @@ const OrderReferenceRoute = OrderReferenceRouteImport.update({
   path: '/order/$reference',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSigninRoute = AdminSigninRouteImport.update({
+  id: '/admin_/signin',
+  path: '/admin/signin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPayfastItnRoute = ApiPublicPayfastItnRouteImport.update({
   id: '/api/public/payfast-itn',
   path: '/api/public/payfast-itn',
@@ -83,6 +114,12 @@ const LovableEmailTransactionalPreviewRoute =
     path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiAuthCustomerProviderCallbackRoute =
+  ApiAuthCustomerProviderCallbackRouteImport.update({
+    id: '/api/auth/customer/$provider/callback',
+    path: '/api/auth/customer/$provider/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -91,12 +128,18 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/collection': typeof CollectionRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/shipping': typeof ShippingRoute
   '/signin': typeof SigninRoute
+  '/signup': typeof SignupRoute
+  '/verify-email': typeof VerifyEmailRoute
+  '/admin/signin': typeof AdminSigninRoute
   '/order/$reference': typeof OrderReferenceRoute
   '/product/$slug': typeof ProductSlugRoute
   '/api/public/payfast-itn': typeof ApiPublicPayfastItnRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/api/auth/customer/$provider/callback': typeof ApiAuthCustomerProviderCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -105,12 +148,18 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/collection': typeof CollectionRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/shipping': typeof ShippingRoute
   '/signin': typeof SigninRoute
+  '/signup': typeof SignupRoute
+  '/verify-email': typeof VerifyEmailRoute
+  '/admin/signin': typeof AdminSigninRoute
   '/order/$reference': typeof OrderReferenceRoute
   '/product/$slug': typeof ProductSlugRoute
   '/api/public/payfast-itn': typeof ApiPublicPayfastItnRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/api/auth/customer/$provider/callback': typeof ApiAuthCustomerProviderCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -120,12 +169,18 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/collection': typeof CollectionRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/shipping': typeof ShippingRoute
   '/signin': typeof SigninRoute
+  '/signup': typeof SignupRoute
+  '/verify-email': typeof VerifyEmailRoute
+  '/admin_/signin': typeof AdminSigninRoute
   '/order/$reference': typeof OrderReferenceRoute
   '/product/$slug': typeof ProductSlugRoute
   '/api/public/payfast-itn': typeof ApiPublicPayfastItnRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/api/auth/customer/$provider/callback': typeof ApiAuthCustomerProviderCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -136,12 +191,18 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/collection'
+    | '/forgot-password'
+    | '/reset-password'
     | '/shipping'
     | '/signin'
+    | '/signup'
+    | '/verify-email'
+    | '/admin/signin'
     | '/order/$reference'
     | '/product/$slug'
     | '/api/public/payfast-itn'
     | '/lovable/email/transactional/preview'
+    | '/api/auth/customer/$provider/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -150,12 +211,18 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/collection'
+    | '/forgot-password'
+    | '/reset-password'
     | '/shipping'
     | '/signin'
+    | '/signup'
+    | '/verify-email'
+    | '/admin/signin'
     | '/order/$reference'
     | '/product/$slug'
     | '/api/public/payfast-itn'
     | '/lovable/email/transactional/preview'
+    | '/api/auth/customer/$provider/callback'
   id:
     | '__root__'
     | '/'
@@ -164,12 +231,18 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/collection'
+    | '/forgot-password'
+    | '/reset-password'
     | '/shipping'
     | '/signin'
+    | '/signup'
+    | '/verify-email'
+    | '/admin_/signin'
     | '/order/$reference'
     | '/product/$slug'
     | '/api/public/payfast-itn'
     | '/lovable/email/transactional/preview'
+    | '/api/auth/customer/$provider/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -179,16 +252,36 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   CollectionRoute: typeof CollectionRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ShippingRoute: typeof ShippingRoute
   SigninRoute: typeof SigninRoute
+  SignupRoute: typeof SignupRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
+  AdminSigninRoute: typeof AdminSigninRoute
   OrderReferenceRoute: typeof OrderReferenceRoute
   ProductSlugRoute: typeof ProductSlugRoute
   ApiPublicPayfastItnRoute: typeof ApiPublicPayfastItnRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  ApiAuthCustomerProviderCallbackRoute: typeof ApiAuthCustomerProviderCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signin': {
       id: '/signin'
       path: '/signin'
@@ -201,6 +294,20 @@ declare module '@tanstack/react-router' {
       path: '/shipping'
       fullPath: '/shipping'
       preLoaderRoute: typeof ShippingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/collection': {
@@ -259,6 +366,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrderReferenceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin_/signin': {
+      id: '/admin_/signin'
+      path: '/admin/signin'
+      fullPath: '/admin/signin'
+      preLoaderRoute: typeof AdminSigninRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payfast-itn': {
       id: '/api/public/payfast-itn'
       path: '/api/public/payfast-itn'
@@ -273,6 +387,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/auth/customer/$provider/callback': {
+      id: '/api/auth/customer/$provider/callback'
+      path: '/api/auth/customer/$provider/callback'
+      fullPath: '/api/auth/customer/$provider/callback'
+      preLoaderRoute: typeof ApiAuthCustomerProviderCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -283,12 +404,18 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   CollectionRoute: CollectionRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ShippingRoute: ShippingRoute,
   SigninRoute: SigninRoute,
+  SignupRoute: SignupRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
+  AdminSigninRoute: AdminSigninRoute,
   OrderReferenceRoute: OrderReferenceRoute,
   ProductSlugRoute: ProductSlugRoute,
   ApiPublicPayfastItnRoute: ApiPublicPayfastItnRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  ApiAuthCustomerProviderCallbackRoute: ApiAuthCustomerProviderCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

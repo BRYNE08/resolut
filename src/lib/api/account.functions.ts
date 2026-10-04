@@ -1,13 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
+import { setResponseHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import type { CustomerProfile } from "@/lib/data/types";
 
 /**
  * Customer portal reads. The session cookie is the security boundary: a signed
- * in customer only ever sees orders placed with their own email address.
+ * in customer sees linked purchases and guest orders for a verified email.
  */
 export const fetchMyOrders = createServerFn({ method: "GET" }).handler(async () => {
+  setResponseHeader("Cache-Control", "private, no-store");
   const [{ getRepository }, { readSession }] = await Promise.all([
     import("@/lib/data/repository.server"),
     import("@/lib/auth/session.server"),
@@ -17,7 +19,9 @@ export const fetchMyOrders = createServerFn({ method: "GET" }).handler(async () 
   if (!session) throw new Error("Sign in to view your orders.");
 
   const repo = await getRepository();
-  const orders = await repo.listOrdersByEmail(session.user.email);
+  const orders = await repo.listOrdersForCustomer(
+    session.user.id, session.user.emailVerified ? session.user.email : undefined,
+  );
   return { viewer: session.user, orders };
 });
 
@@ -38,6 +42,7 @@ export type ProfileInput = z.infer<typeof profileSchema>;
 
 /** The signed-in customer's saved contact + delivery details. */
 export const fetchMyProfile = createServerFn({ method: "GET" }).handler(async () => {
+  setResponseHeader("Cache-Control", "private, no-store");
   const [{ getRepository }, { readSession }] = await Promise.all([
     import("@/lib/data/repository.server"),
     import("@/lib/auth/session.server"),
@@ -47,12 +52,15 @@ export const fetchMyProfile = createServerFn({ method: "GET" }).handler(async ()
   if (!session) throw new Error("Sign in to view your profile.");
 
   const repo = await getRepository();
-  const saved = await repo.getProfile(session.user.email);
+  // The legacy column is named accountEmail; new keys use the stable customer ID.
+  // Only a currently verified email may read a pre-OAuth profile for migration.
+  const saved = await repo.getProfile(`customer:${session.user.id}`) ??
+    (session.user.emailVerified ? await repo.getProfile(session.user.email) : null);
   return {
     accountEmail: session.user.email,
     name: session.user.name,
     profile:
-      saved ??
+      (saved ? { ...saved, accountEmail: session.user.email } : null) ??
       ({
         accountEmail: session.user.email,
         contactEmail: session.user.email,
@@ -62,7 +70,7 @@ export const fetchMyProfile = createServerFn({ method: "GET" }).handler(async ()
 });
 
 /**
- * Saves the profile. The session email is the key, so a customer can never
+ * Saves the profile. The session user ID is the key, so a customer can never
  * write to another account's profile by changing the contact email field.
  */
 export const saveMyProfile = createServerFn({ method: "POST" })
@@ -82,7 +90,7 @@ export const saveMyProfile = createServerFn({ method: "POST" })
     };
 
     const repo = await getRepository();
-    const profile = await repo.saveProfile(session.user.email, {
+    const profile = await repo.saveProfile(`customer:${session.user.id}`, {
       contactEmail: data.contactEmail.trim(),
       phone: clean(data.phone),
       addressLine: clean(data.addressLine),
@@ -94,5 +102,5 @@ export const saveMyProfile = createServerFn({ method: "POST" })
       country: clean(data.country) ?? "South Africa",
       deliveryNotes: clean(data.deliveryNotes),
     });
-    return { profile };
+    return { profile: { ...profile, accountEmail: session.user.email } };
   });

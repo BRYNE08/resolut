@@ -17,12 +17,12 @@ const uploadImageSchema = z.object({
 export const uploadPieceImage = createServerFn({ method: "POST" })
   .inputValidator((input) => uploadImageSchema.parse(input))
   .handler(async ({ data }) => {
-    const [{ readSession }, { canAccessStudio }, uploads] = await Promise.all([
+    const [{ readStudioSession }, { canAccessStudio }, uploads] = await Promise.all([
       import("@/lib/auth/session.server"),
       import("@/lib/auth/config"),
       import("@/lib/uploads/uploadthing.server"),
     ]);
-    const { session } = await readSession();
+    const { session } = await readStudioSession();
     if (!canAccessStudio(session)) throw new Error("Not authorised for the studio.");
 
     const binary = atob(data.data);

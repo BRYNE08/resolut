@@ -1,5 +1,6 @@
+import { ProductAvailabilityError } from "../data/product-availability";
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
+import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 /**
@@ -20,13 +21,23 @@ const checkoutSchema = z.object({
   country: z.string().min(2).max(60).default("South Africa"),
   deliveryNotes: z.string().max(500).optional(),
   lines: z
-    .array(z.object({ slug: z.string().min(1), quantity: z.number().int().min(1).max(99) }))
-    .min(1),
+    .array(
+      z.object({
+        slug: z.string().min(1).max(100),
+        quantity: z.number().int().min(1).max(99),
+        expectedUnitPriceCents: z.number().int().positive(),
+      }),
+    )
+    .min(1)
+    .max(100),
 });
 
 function siteOrigin() {
-  const configured = process.env["PUBLIC_SITE_URL"] ?? process.env["AUTH_URL"];
+  const configured = process.env["PUBLIC_SITE_URL"] || process.env["AUTH_URL"];
   if (configured) return configured.replace(/\/$/, "");
+  if (process.env["NODE_ENV"] === "production") {
+    throw new Error("PUBLIC_SITE_URL is required for checkout return links.");
+  }
   return new URL(getRequest().url).origin;
 }
 
@@ -36,9 +47,24 @@ export const startPayfastCheckout = createServerFn({ method: "POST" })
     const { getRepository } = await import("@/lib/data/repository.server");
     const { ensureCartId } = await import("@/lib/data/cart-session.server");
     const { buildCheckout } = await import("@/lib/payments/payfast.server");
+    const { issueOrderAccessToken } = await import("@/lib/auth/order-access.server");
+    const { authSecret } = await import("@/lib/auth/secret.server");
+    const { readSession } = await import("@/lib/auth/session.server");
+
+    setResponseHeader("Cache-Control", "private, no-store");
+    authSecret();
+    const origin = siteOrigin();
 
     const repo = await getRepository();
-    const order = await repo.createOrder(data);
+    const { session } = await readSession();
+    let order;
+    try {
+      order = await repo.createOrder({ ...data, userId: session?.user.id });
+    } catch (error) {
+      if (error instanceof ProductAvailabilityError)
+        return { ok: false as const, message: error.message };
+      throw error;
+    }
 
     // The order is persisted, so the cart's job is done.
     await repo.clearCart(await ensureCartId()).catch(() => undefined);
@@ -49,8 +75,9 @@ export const startPayfastCheckout = createServerFn({ method: "POST" })
         : `Resolut order ${order.reference}`;
 
     const payment = buildCheckout({
-      origin: siteOrigin(),
+      origin,
       reference: order.reference,
+      accessToken: issueOrderAccessToken(order.reference),
       amount: order.total,
       itemName,
       itemDescription: order.lines.map((l) => `${l.quantity} x ${l.name}`).join(", "),
@@ -59,15 +86,27 @@ export const startPayfastCheckout = createServerFn({ method: "POST" })
       phone: data.phone,
     });
 
-    return { source: repo.name, order, payment };
+    return { ok: true as const, source: repo.name, order, payment };
   });
 
-/** Order lookup by reference — used by the confirmation page to poll status. */
-export const fetchOrder = createServerFn({ method: "GET" })
-  .inputValidator((input) => z.object({ reference: z.string().min(3) }).parse(input))
+/** POST keeps guest credentials out of request URLs and intermediary caches. */
+export const fetchOrder = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z
+      .object({
+        reference: z.string().min(3).max(80),
+        accessToken: z.string().max(128).optional(),
+      })
+      .parse(input),
+  )
   .handler(async ({ data }) => {
+    setResponseHeader("Cache-Control", "private, no-store");
     const { getRepository } = await import("@/lib/data/repository.server");
+    const { readSession, readStudioSession } = await import("@/lib/auth/session.server");
+    const { readAccessibleOrder } = await import("@/lib/auth/order-access.server");
     const repo = await getRepository();
-    const order = await repo.getOrder(data.reference);
+    const [customer, studio] = await Promise.all([readSession(), readStudioSession()]);
+    const session = studio.session ?? customer.session;
+    const order = await readAccessibleOrder(repo, data.reference, session, data.accessToken);
     return { source: repo.name, order };
   });

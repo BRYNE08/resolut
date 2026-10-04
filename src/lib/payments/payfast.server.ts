@@ -9,6 +9,7 @@
  * PayFast's public sandbox merchant so the flow is testable end to end.
  */
 import { createHash } from "crypto";
+import { privateOrderUrl } from "../auth/order-access.server.ts";
 
 /** PayFast's documented sandbox merchant — safe to ship as a default. */
 const SANDBOX = {
@@ -79,6 +80,7 @@ export type PayfastCheckout = {
 export function buildCheckout(input: {
   origin: string;
   reference: string;
+  accessToken: string;
   amount: number;
   itemName: string;
   itemDescription?: string;
@@ -88,11 +90,15 @@ export function buildCheckout(input: {
 }): PayfastCheckout {
   const cfg = payfastConfig();
   const [firstName, ...rest] = input.customerName.trim().split(/\s+/);
+  const returnUrl = new URL(privateOrderUrl(input.origin, input.reference, input.accessToken));
+  returnUrl.searchParams.set("status", "complete");
+  const cancelUrl = new URL(returnUrl);
+  cancelUrl.searchParams.set("status", "cancelled");
   const pairs: [string, string][] = [
     ["merchant_id", cfg.merchantId],
     ["merchant_key", cfg.merchantKey],
-    ["return_url", `${input.origin}/order/${input.reference}?status=complete`],
-    ["cancel_url", `${input.origin}/order/${input.reference}?status=cancelled`],
+    ["return_url", returnUrl.toString()],
+    ["cancel_url", cancelUrl.toString()],
     ["notify_url", `${input.origin}/api/public/payfast-itn`],
     ["name_first", firstName ?? ""],
     ["name_last", rest.join(" ")],

@@ -60,6 +60,7 @@ export const ModelName = {
   WaitlistSignup: 'WaitlistSignup',
   ContactMessage: 'ContactMessage',
   User: 'User',
+  AuthRateLimit: 'AuthRateLimit',
   Account: 'Account',
   Session: 'Session',
   VerificationToken: 'VerificationToken',
@@ -91,6 +92,7 @@ export const ProductScalarFieldEnum = {
   badge: 'badge',
   body: 'body',
   priceCents: 'priceCents',
+  images: 'images',
   image: 'image',
   imageAlt: 'imageAlt',
   detailImage: 'detailImage',
@@ -208,10 +210,21 @@ export const UserScalarFieldEnum = {
   emailVerified: 'emailVerified',
   image: 'image',
   role: 'role',
+  passwordHash: 'passwordHash',
+  sessionVersion: 'sessionVersion',
   createdAt: 'createdAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const AuthRateLimitScalarFieldEnum = {
+  key: 'key',
+  count: 'count',
+  expiresAt: 'expiresAt'
+} as const
+
+export type AuthRateLimitScalarFieldEnum = (typeof AuthRateLimitScalarFieldEnum)[keyof typeof AuthRateLimitScalarFieldEnum]
 
 
 export const AccountScalarFieldEnum = {

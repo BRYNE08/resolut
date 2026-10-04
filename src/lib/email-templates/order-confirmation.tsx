@@ -6,6 +6,7 @@ import {
   Heading,
   Hr,
   Html,
+  Link,
   Preview,
   Section,
   Text,
@@ -25,6 +26,7 @@ interface Props {
   estimatedDelivery?: string
   lines?: Line[]
   address?: string
+  orderUrl?: string
 }
 
 const Email = ({
@@ -34,6 +36,7 @@ const Email = ({
   estimatedDelivery,
   lines = [],
   address,
+  orderUrl,
 }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
@@ -79,6 +82,13 @@ const Email = ({
           </Section>
         ) : null}
 
+        {orderUrl ? (
+          <Text style={p}>
+            <Link href={orderUrl}>View your order</Link>
+            <br />
+            This private link expires in 30 days. Keep it private.
+          </Text>
+        ) : null}
         <Hr style={hr} />
         <Text style={foot}>
           We&rsquo;ll email you again the moment your order moves through the workshop and when it is

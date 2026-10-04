@@ -2,6 +2,16 @@ import { sendTemplateEmail } from './send-email'
 import { estimatedDelivery } from '@/lib/resolut/delivery'
 import { ZAR } from '@/lib/money'
 import type { Order, OrderStatus } from '@/lib/data/types'
+import { getRequest } from '@tanstack/react-start/server'
+import { privateOrderUrl } from '@/lib/auth/order-access.server'
+
+function orderLink(reference: string) {
+  const configured = process.env['PUBLIC_SITE_URL'] || process.env['AUTH_URL']
+  if (!configured && process.env['NODE_ENV'] === 'production') {
+    throw new Error('PUBLIC_SITE_URL is required for private order email links')
+  }
+  return privateOrderUrl(configured || new URL(getRequest().url).origin, reference)
+}
 
 /** Copy for each status change we notify the customer about. */
 const STATUS_COPY: Partial<Record<OrderStatus, { label: string; note: string; showEta: boolean }>> = {
@@ -31,9 +41,9 @@ function addressOf(order: Order) {
 }
 
 /** Never let a mail failure break the order flow it is attached to. */
-async function safeSend(promise: Promise<unknown>, context: string) {
+async function safeSend(send: () => Promise<unknown>, context: string) {
   try {
-    await promise
+    await send()
   } catch (error) {
     console.error(`[email] ${context} failed:`, error)
   }
@@ -41,11 +51,12 @@ async function safeSend(promise: Promise<unknown>, context: string) {
 
 export async function sendOrderConfirmationEmail(order: Order) {
   await safeSend(
-    sendTemplateEmail('order-confirmation', order.email, {
+    () => sendTemplateEmail('order-confirmation', order.email, {
       idempotencyKey: `order-confirmation-${order.reference}`,
       templateData: {
         customerName: order.customerName,
         reference: order.reference,
+        orderUrl: orderLink(order.reference),
         total: ZAR(order.total),
         estimatedDelivery: estimatedDelivery(order.createdAt),
         address: addressOf(order),
@@ -64,11 +75,12 @@ export async function sendOrderStatusEmail(order: Order, status: OrderStatus) {
   const copy = STATUS_COPY[status]
   if (!copy) return
   await safeSend(
-    sendTemplateEmail('order-status-update', order.email, {
+    () => sendTemplateEmail('order-status-update', order.email, {
       idempotencyKey: `order-status-${status}-${order.reference}`,
       templateData: {
         customerName: order.customerName,
         reference: order.reference,
+        orderUrl: orderLink(order.reference),
         statusLabel: copy.label,
         statusNote: copy.note,
         showEta: copy.showEta,

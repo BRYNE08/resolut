@@ -12,10 +12,11 @@ import {
   updateJob,
   updatePiece,
 } from "@/lib/api/admin.functions";
-import { signOut } from "@/lib/api/auth.functions";
+import { signOutStudio } from "@/lib/api/auth.functions";
 import { uploadPieceImage } from "@/lib/api/uploads.functions";
+import { pieceBodySchema } from "@/lib/api/admin.schemas";
 import { canAccessStudio } from "@/lib/auth/config";
-import { dashboardQuery, productsQuery, queryKeys, sessionQuery, studioQuery } from "@/lib/api/queries";
+import { dashboardQuery, productsQuery, queryKeys, studioSessionQuery, studioQuery } from "@/lib/api/queries";
 
 import type {
   ContactMessage,
@@ -51,9 +52,9 @@ export const Route = createFileRoute("/admin")({
   }),
   // Route gate: UX only — every studio server function re-checks the role.
   beforeLoad: async ({ context, location }) => {
-    const auth = await context.queryClient.ensureQueryData(sessionQuery);
+    const auth = await context.queryClient.fetchQuery(studioSessionQuery);
     if (!canAccessStudio(auth.session)) {
-      throw redirect({ to: "/signin", search: { redirect: location.href } });
+      throw redirect({ to: "/admin/signin" });
     }
   },
   // Prime the cache on the server so the dashboard renders fully formed.
@@ -148,7 +149,7 @@ function AdminPage() {
   // cookie, then leave via a history replace so Back can't restore the shell.
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const leave = useServerFn(signOut);
+  const leave = useServerFn(signOutStudio);
   const leaving = useMutation({ mutationFn: () => leave({}) });
 
   async function handleSignOut() {
@@ -671,12 +672,12 @@ function PiecesView({
                           type="button"
                           disabled={remove.isPending}
                           onClick={() => {
-                            if (confirm(`Remove ${p.name} from the catalogue?`)) {
+                            if (confirm(`Permanently delete ${p.name}? This cannot be undone. It will also be removed from customer carts.`)) {
                               remove.mutate({ data: { slug: p.slug } });
                             }
                           }}
                         >
-                          Remove
+                          Delete permanently
                         </button>
                       </div>
                     </td>
@@ -692,6 +693,9 @@ function PiecesView({
           </table>
         </section>
 
+        {remove.error ? (
+          <p className="ad-form-msg err" role="alert">{remove.error.message || "Could not delete the piece."}</p>
+        ) : null}
         {composerOpen ? <NewPieceCard onClose={() => setComposerOpen(false)} /> : null}
         {editingPiece && !composerOpen ? (
           <EditPieceCard
@@ -713,92 +717,60 @@ function PiecesView({
 }
 
 
-/**
- * Image field with an UploadThing upload. The hidden-ish text input keeps the
- * form contract (`image`) intact, so both piece forms submit unchanged.
- */
-function PieceImageField({ defaultValue = "" }: { defaultValue?: string }) {
+/** Ordered gallery; the first image is used on cards and in the cart. */
+function PieceImageField({ defaultValue = [] }: { defaultValue?: string[] }) {
   const upload = useServerFn(uploadPieceImage);
-  const [value, setValue] = useState(defaultValue);
+  const [images, setImages] = useState(defaultValue);
   const [busy, setBusy] = useState(false);
-  const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
   async function onPick(event: React.ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
-    const file = input.files?.[0];
-    if (!file) return;
+    const files = Array.from(input.files ?? []);
+    input.value = "";
+    if (!files.length) return;
+    if (images.length + files.length > 10) { setError("Choose up to 10 images per piece."); return; }
     setBusy(true);
     setError(null);
-    setNote(null);
     try {
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      let binary = "";
-      for (const byte of bytes) binary += String.fromCharCode(byte);
-      const result = await upload({
-        data: { name: file.name, contentType: file.type as never, data: btoa(binary) },
-      });
-      setValue(result.url);
-      setNote(
-        result.source === "uploadthing"
-          ? "Uploaded to UploadThing."
-          : "Stored inline for now — set UPLOADTHING_TOKEN to push files to UploadThing.",
-      );
-    } catch (err) {
-      setError((err as Error).message || "Upload failed — please try another file.");
-    } finally {
-      setBusy(false);
-      input.value = "";
-    }
+      for (const file of files) {
+        if (file.size > 4 * 1024 * 1024) throw new Error(`${file.name} is larger than 4 MB.`);
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        let binary = "";
+        for (const byte of bytes) binary += String.fromCharCode(byte);
+        const result = await upload({ data: { name: file.name, contentType: file.type as never, data: btoa(binary) } });
+        setImages((current) => [...new Set([...current, result.url])]);
+      }
+    } catch (err) { setError((err as Error).message || "Upload failed. Please retry the remaining images."); }
+    finally { setBusy(false); }
   }
-
   return (
     <div className="wide ad-upload">
-      <span className="ad-upload-label">Piece image</span>
-      <div className="ad-upload-row">
-        <div className="ad-upload-preview">
-          {value ? <img src={value} alt="" /> : <span>No image</span>}
+      <span className="ad-upload-label">Piece images</span>
+      <input type="hidden" name="images" value={JSON.stringify(images.filter((image) => image.trim()))} />
+      <fieldset disabled={busy} className="ad-upload-gallery">
+        {images.map((image, index) => (
+          <div className="ad-upload-row" key={index}>
+            <div className="ad-upload-preview">{image ? <img src={image} alt={`Piece image ${index + 1}`} /> : <span>No image</span>}</div>
+            <div className="ad-upload-actions">
+              <label className="ad-upload-url">{index === 0 ? "Cover image" : `Image ${index + 1}`}<input className="ad-upload-path" value={image} onChange={(event) => { const value = event.currentTarget.value; setImages((current) => current.map((url, i) => i === index ? value : url)); }} /></label>
+              {index > 0 && <button type="button" className="ad-btn ghost" onClick={() => setImages((current) => [current[index], ...current.filter((_, i) => i !== index)])}>Make cover</button>}
+              <button type="button" className="ad-btn ghost" onClick={() => setImages((current) => current.filter((_, i) => i !== index))}>Remove</button>
+            </div>
+          </div>
+        ))}
+        <div className="ad-upload-toolbar">
+        <label className="ad-btn ghost ad-upload-btn">{busy ? "Uploading…" : "Upload images"}<input type="file" multiple accept="image/png,image/jpeg,image/webp,image/avif,image/svg+xml" onChange={onPick} disabled={busy || images.length >= 10} /></label>
+        <button type="button" className="ad-btn ghost" disabled={images.length >= 10} onClick={() => setImages((current) => [...current, ""])}>Add image URL</button>
         </div>
-        <div className="ad-upload-actions">
-          <label className="ad-btn ghost ad-upload-btn">
-            {busy ? "Uploading…" : value ? "Replace image" : "Upload image"}
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp,image/avif,image/svg+xml"
-              onChange={onPick}
-              disabled={busy}
-            />
-          </label>
-          {value ? (
-            <button className="ad-btn ghost" type="button" onClick={() => setValue("")}>
-              Clear
-            </button>
-          ) : null}
-          <input
-            name="image"
-            className="ad-upload-path"
-            value={value}
-            onChange={(event) => setValue(event.currentTarget.value)}
-            placeholder="/resolut/strata.jpg or an uploaded URL"
-          />
-          {error ? (
-            <p className="ad-form-msg err" role="alert">
-              {error}
-            </p>
-          ) : note ? (
-            <p className="ad-form-msg ok" role="status">
-              {note}
-            </p>
-          ) : (
-            <p className="ad-upload-hint">PNG, JPG, WebP, AVIF or SVG · up to 4 MB</p>
-          )}
-        </div>
-      </div>
+      </fieldset>
+      {busy && <input aria-label="Images are still uploading" required value="" onChange={() => {}} style={{ position: "absolute", width: 1, height: 1, opacity: 0 }} />}
+      <p className="ad-upload-hint">Up to 10 images · 4 MB each. The first image is the cover.</p>
+      {error && <p className="ad-form-msg err" role="alert">{error}</p>}
     </div>
   );
 }
 
-/** Repeatable value/label chips shown on the product page ("212 mm" · "Diameter"). */
+
 function SpecsField({ defaultValue = [] }: { defaultValue?: ProductSpec[] }) {
   const [rows, setRows] = useState<ProductSpec[]>(
     defaultValue.length ? defaultValue : [{ v: "", k: "" }],
@@ -977,8 +949,12 @@ function NewPieceCard({ onClose }: { onClose: () => void }) {
     const body = text("body")
       .split("\n\n")
       .map((line) => line.trim())
-      .filter(Boolean)
-      .slice(0, 6);
+      .filter(Boolean);
+    const bodyValidation = pieceBodySchema.safeParse(body);
+    if (!bodyValidation.success) {
+      setError(bodyValidation.error.issues[0].message);
+      return;
+    }
 
     const specs = readSpecs(values);
     const details = readDetails(values);
@@ -991,7 +967,7 @@ function NewPieceCard({ onClose }: { onClose: () => void }) {
         intro,
         price,
         badge: text("badge") || undefined,
-        image: text("image") || undefined,
+        images: JSON.parse(text("images") || "[]"),
         imageAlt: text("imageAlt") || undefined,
         body: body.length ? body : undefined,
         specs: specs.length ? specs : undefined,
@@ -1054,7 +1030,7 @@ function NewPieceCard({ onClose }: { onClose: () => void }) {
         </label>
         <label className="wide">
           <span>Description</span>
-          <textarea name="body" rows={4} placeholder="One paragraph per blank line." />
+          <textarea name="body" rows={4} placeholder="Separate paragraphs with a blank line. Up to 6 paragraphs, 5,000 characters each." />
         </label>
         <SpecsField />
         <DetailsField />
@@ -1111,8 +1087,12 @@ function EditPieceCard({
     const body = text("body")
       .split("\n\n")
       .map((line) => line.trim())
-      .filter(Boolean)
-      .slice(0, 6);
+      .filter(Boolean);
+    const bodyValidation = pieceBodySchema.safeParse(body);
+    if (!bodyValidation.success) {
+      setError(bodyValidation.error.issues[0].message);
+      return;
+    }
 
     const specs = readSpecs(values);
     const details = readDetails(values);
@@ -1127,7 +1107,7 @@ function EditPieceCard({
           intro: text("intro"),
           price,
           badge: text("badge") || null,
-          image: text("image") || undefined,
+          images: JSON.parse(text("images") || "[]"),
           imageAlt: text("imageAlt") || undefined,
           body: body.length ? body : undefined,
           specs,
@@ -1186,14 +1166,14 @@ function EditPieceCard({
           <span>Monthly capacity</span>
           <input name="capacity" inputMode="numeric" defaultValue={stock.capacity} />
         </label>
-        <PieceImageField defaultValue={piece.image} />
+        <PieceImageField defaultValue={piece.images?.length ? piece.images : [...new Set([piece.image, piece.detailImage])]} />
         <label className="wide">
           <span>Image alt text</span>
           <input name="imageAlt" defaultValue={piece.imageAlt} />
         </label>
         <label className="wide">
           <span>Description</span>
-          <textarea name="body" rows={4} defaultValue={piece.body.join("\n\n")} />
+          <textarea name="body" rows={4} defaultValue={piece.body.join("\n\n")} placeholder="Separate paragraphs with a blank line. Up to 6 paragraphs, 5,000 characters each." />
         </label>
         <SpecsField defaultValue={piece.specs} />
         <DetailsField defaultValue={piece.details} />

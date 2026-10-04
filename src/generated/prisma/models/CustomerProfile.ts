@@ -15,7 +15,8 @@ import type * as Prisma from "../internal/prismaNamespace.ts"
 /**
  * Model CustomerProfile
  * Saved contact + delivery details for a signed-in customer.
- * Keyed by the account (session) email so the row survives contact-email edits.
+ * New rows use "customer:<userId>" in the legacy accountEmail key column.
+ * Older email-keyed rows can be read only after verifying ownership of that email.
  */
 export type CustomerProfileModel = runtime.Types.Result.DefaultSelection<Prisma.$CustomerProfilePayload>
 

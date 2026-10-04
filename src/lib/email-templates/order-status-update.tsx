@@ -6,6 +6,7 @@ import {
   Heading,
   Hr,
   Html,
+  Link,
   Preview,
   Section,
   Text,
@@ -19,6 +20,7 @@ interface Props {
   statusNote?: string
   estimatedDelivery?: string
   showEta?: boolean
+  orderUrl?: string
 }
 
 const Email = ({
@@ -28,6 +30,7 @@ const Email = ({
   statusNote,
   estimatedDelivery,
   showEta = true,
+  orderUrl,
 }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
@@ -51,7 +54,13 @@ const Email = ({
 
         <Hr style={hr} />
         <Text style={foot}>
-          You can track this order any time on our shipping page using the reference above.
+          {orderUrl ? (
+            <>
+              <Link href={orderUrl}>View your order</Link>
+              <br />
+              This private link expires in 30 days. Keep it private.
+            </>
+          ) : 'Sign in with the account matching your order email to view your order.'}
         </Text>
       </Container>
     </Body>

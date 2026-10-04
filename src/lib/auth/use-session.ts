@@ -1,7 +1,4 @@
-/**
- * Client-side session access. Same surface as Auth.js's `useSession()`, so the
- * switch to the real provider is a one-file change.
- */
+/** Customer session access. Staff routes use studioSessionQuery separately. */
 import { useQuery } from "@tanstack/react-query";
 
 import { sessionQuery } from "@/lib/api/queries";
@@ -13,7 +10,7 @@ export function useSession() {
     session: data?.session ?? null,
     user: data?.session?.user ?? null,
     providers: data?.providers ?? [],
-    /** false while Auth.js is running in plug-and-play demo mode. */
+    /** Whether a persistent authentication secret is configured. */
     live: data?.live ?? false,
     configured: data?.configured ?? false,
     status: isLoading ? "loading" : data?.session ? "authenticated" : "unauthenticated",

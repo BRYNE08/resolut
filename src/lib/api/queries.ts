@@ -9,19 +9,20 @@ import { queryOptions } from "@tanstack/react-query";
 
 import { fetchMyOrders, fetchMyProfile } from "./account.functions";
 import { fetchDashboard, fetchStudioData } from "./admin.functions";
-import { fetchSession } from "./auth.functions";
+import { fetchSession, fetchStudioSession } from "./auth.functions";
 import { fetchCart } from "./cart.functions";
 import { fetchProduct, fetchProducts } from "./catalog.functions";
 import { fetchOrder } from "./payments.functions";
 
 export const queryKeys = {
   session: ["session"] as const,
+  studioSession: ["studio-session"] as const,
   cart: ["cart"] as const,
   products: ["products"] as const,
   product: (slug: string) => ["product", slug] as const,
   dashboard: ["dashboard"] as const,
   studio: ["studio"] as const,
-  order: (reference: string) => ["order", reference] as const,
+  order: (reference: string, accessToken?: string) => ["order", reference, accessToken ?? null] as const,
   myOrders: ["my-orders"] as const,
   myProfile: ["my-profile"] as const,
 };
@@ -44,7 +45,13 @@ export const myProfileQuery = queryOptions({
 export const sessionQuery = queryOptions({
   queryKey: queryKeys.session,
   queryFn: () => fetchSession(),
-  staleTime: 5 * 60_000,
+  staleTime: 0,
+});
+
+export const studioSessionQuery = queryOptions({
+  queryKey: queryKeys.studioSession,
+  queryFn: () => fetchStudioSession(),
+  staleTime: 0,
 });
 
 export const productsQuery = queryOptions({
@@ -68,11 +75,13 @@ export const cartQuery = queryOptions({
 });
 
 /** Single order by reference — the post-PayFast confirmation page polls this. */
-export const orderQuery = (reference: string) =>
+export const orderQuery = (reference: string, accessToken?: string) =>
   queryOptions({
-    queryKey: queryKeys.order(reference),
-    queryFn: () => fetchOrder({ data: { reference } }),
+    queryKey: queryKeys.order(reference, accessToken),
+    queryFn: () => fetchOrder({ data: { reference, accessToken } }),
     staleTime: 0,
+    gcTime: 0,
+    retry: false,
   });
 
 export const dashboardQuery = queryOptions({

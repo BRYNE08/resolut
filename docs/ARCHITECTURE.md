@@ -32,16 +32,14 @@ prisma/schema.prisma
 - The active adapter name is returned with every read (`source: "in-memory" |
   "prisma"`) and shown in the studio dashboard.
 
-## Auth.js
+## Authentication
 
-- `src/lib/auth/config.ts` holds Auth.js-shaped types, provider descriptors
-  (Google / GitHub / email link) and the `canAccessStudio` role rule.
-- `src/lib/auth/session.server.ts` is the only place that reads a session. With
-  no `AUTH_SECRET` it returns a demo studio session; the live Auth.js call is
-  stubbed in place, commented, ready to enable.
-- `src/lib/auth/use-session.ts` mirrors Auth.js's `useSession()` for components.
-- `src/lib/api/admin.functions.ts` re-checks the role server-side — the route
-  guard is UX, the server check is the boundary.
+- Customers use `/signin` or `/signup` with verified email/password or Google/Apple OAuth; staff use `/admin/signin` with provisioned credentials.
+- `customer-oauth.server.ts` handles authorization, ten-minute state/nonce cookies, Google PKCE and Apple's form POST callback.
+- `customer-identity.server.ts` verifies signed provider tokens and creates/loads customer-only User/Account records by provider subject.
+- `session.server.ts` maintains separate encrypted customer/studio cookies. Staff functions explicitly read the studio session; customer sessions are rechecked against the database.
+- Signed-in orders are linked to stable customer IDs. Matching guest-order emails requires verified ownership.
+- See [AUTHENTICATION.md](AUTHENTICATION.md) for provider configuration, data compatibility and validation.
 
 ## Data fetching
 
@@ -66,3 +64,7 @@ prisma/schema.prisma
 Bank fields in the checkout UI are illustrative only — nothing is transmitted or
 stored. PayFast's hosted page should own card/EFT capture; `PAYFAST_*` variables
 are reserved in `.env.example`.
+
+Customer password authentication uses `password.functions.ts`, `password-service.server.ts`, salted scrypt hashes, hashed single-use email tokens, atomic database rate limits and session versions for revocation. See [AUTHENTICATION.md](AUTHENTICATION.md) for the required additive database upgrade and email setup.
+
+Email delivery uses Resend’s REST API through `resend.server.ts`; `send-email.ts` renders the shared React templates for customer auth and order emails. Server-only configuration is `RESEND_API_KEY` plus `EMAIL_FROM`. Environment files are ignored by Git.

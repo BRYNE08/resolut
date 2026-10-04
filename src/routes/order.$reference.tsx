@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import "@/lib/resolut/resolut.css";
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/order/$reference")({
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary_large_image" },
         { name: "robots", content: "noindex" },
+        { name: "referrer", content: "no-referrer" },
       ],
     };
   },
@@ -62,13 +64,22 @@ const COPY: Record<string, { eyebrow: string; heading: string; note: string }> =
 function OrderPage() {
   const { reference } = Route.useParams();
   const { status: fromPayfast } = Route.useSearch();
+  const hash = useLocation({ select: (location) => location.hash });
+  const [credential, setCredential] = useState<{ hash: string; token?: string }>();
+  useEffect(() => {
+    setCredential({
+      hash,
+      token: new URLSearchParams(hash.replace(/^#/, "")).get("access") ?? undefined,
+    });
+  }, [hash]);
 
   const { data, isPending } = useQuery({
-    ...orderQuery(reference),
+    ...orderQuery(reference, credential?.token),
+    enabled: credential?.hash === hash,
     // While PayFast's callback is still in flight, poll until it lands.
     refetchInterval: (query) => {
       const current = query.state.data as { order: Order | null } | undefined;
-      return current?.order && current.order.status !== "await" ? false : 4000;
+      return current?.order?.status === "await" ? 4000 : false;
     },
   });
 
@@ -95,9 +106,19 @@ function OrderPage() {
               </div>
             ) : !order ? (
               <div className="co-done">
-                <p className="eyebrow">Not found</p>
-                <h1>We can&rsquo;t find order {reference}</h1>
-                <p>Check the reference in your confirmation email, or get in touch and we&rsquo;ll trace it.</p>
+                <p className="eyebrow">Order unavailable</p>
+                <h1>We can&rsquo;t display this order</h1>
+                <p>
+                  Open the private link in your latest order email or sign in with the account
+                  matching your order email. Links expire after 30 days. For help with an older
+                  order, email the studio.
+                </p>
+                <Link className="btn btn-primary" to="/signin" search={{ redirect: `/order/${encodeURIComponent(reference)}` }}>
+                  Sign in
+                </Link>{" "}
+                <a className="btn btn-ghost" href="mailto:orders@resolutdesign.co.za">
+                  Contact the studio
+                </a>
                 <Link className="btn btn-primary" to="/collection" search={{ availability: "all", sort: "curated" }}>
                   Back to the collection
                 </Link>

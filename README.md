@@ -1,16 +1,18 @@
 # Resolut
 
 A lighting studio storefront and studio dashboard, built with TanStack Start
-(React 19 + Vite), TanStack Query, Prisma-shaped data adapters and an
-Auth.js-shaped session layer.
+(React 19 + Vite), TanStack Query, Prisma-shaped data adapters and separate customer/staff
+session layers.
 
 The app **runs with an empty environment**: no database, no auth credentials.
-It serves in-memory sample data and signs you in with demo studio accounts.
+It serves in-memory sample data and supports development-only studio demo accounts.
+Customer email/password and Google/Apple authentication require configuration.
 Every step below flips one piece to the real thing — no component changes.
 
 ```
 storefront          /  /collection  /product/$slug  /checkout
-studio dashboard    /admin  (role-gated)  /signin
+studio dashboard    /admin  (role-gated)  /admin/signin
+customer account    /signin  /signup  /account
 ```
 
 ## 1. Run it locally
@@ -26,7 +28,7 @@ Copy the env template — leave everything blank for now:
 cp .env.example .env
 ```
 
-Sign in at `/signin` with the demo accounts listed on that page:
+Sign in at `/admin/signin` with the development demo accounts listed on that page:
 
 | Email | Password | Role |
 | --- | --- | --- |
@@ -81,53 +83,26 @@ Models live in `prisma/schema.prisma`: `Product`, `Order`/`OrderItem`,
 (`User`, `Account`, `Session`, `VerificationToken`). Prices and totals are
 stored in **cents (ZAR)**.
 
-## 3. Wire up authentication
+## 3. Authentication
 
-Sign-in already works for real: the session is an encrypted, http-only cookie
-(`src/lib/auth/session.server.ts`). Two levels of "real":
+Customers sign in or create an account at `/signin` (or `/signup`) with email/password, Google
+or Apple. Staff use `/admin/signin` with the configured studio/admin credentials.
+These flows have independent sessions and logout actions; customer OAuth never
+grants studio access.
 
-### a. Your own credential accounts (no extra packages)
+Google and Apple require provider-console credentials, a persistent PostgreSQL
+database, and a random `AUTH_SECRET` of at least 32 characters. Provider buttons
+stay disabled until configured. Apple requires an HTTPS callback URL.
 
-Set these in `.env` and the demo accounts disappear from `/signin`:
+See [authentication setup](docs/AUTHENTICATION.md) for the exact environment
+variables, Google/Apple callback URLs, account ownership rules and activation checks.
+Email/password accounts include verification, recovery and password changes. Configure
+`RESEND_API_KEY` and `EMAIL_FROM`, verify the sender domain in Resend, and apply the additive schema upgrade with `bun run db:auth-upgrade`
+before deploying to an existing database (see the setup guide).
 
-```
-AUTH_SECRET=RQ3biIOKeoc5B/dbgWcEAJ5ICk5uVjnwXSUZd9VcmdEFRQ7b3gc9BpztbWI=
-STUDIO_EMAIL=you@studio.co.za
-STUDIO_PASSWORD=a-long-random-password
-STUDIO_NAME=Studio
-ADMIN_EMAIL=
-ADMIN_PASSWORD=
-ADMIN_NAME=
-```
-
-`AUTH_SECRET` seals the cookie in production; without it a development key is
-used and sessions reset on redeploy.
-
-### b. Full Auth.js (Google / GitHub / email link)
-
-1. `bun add @auth/core @auth/prisma-adapter`
-2. Fill in the provider credentials in `.env`:
-
-   ```
-   AUTH_URL=https://your-domain.com
-   AUTH_GOOGLE_ID=
-   AUTH_GOOGLE_SECRET=
-   AUTH_GITHUB_ID=
-   AUTH_GITHUB_SECRET=
-   AUTH_RESEND_KEY=
-   ```
-
-   Redirect/callback URL: `https://your-domain.com/api/auth/callback/<provider>`.
-3. In `src/lib/auth/session.server.ts`, replace the cookie read in
-   `readSession()` with the Auth.js session read and use the Prisma adapter for
-   `User`/`Account`/`Session`. Everything downstream — `useSession()`, the
-   `/admin` route gate, and the server-side `canAccessStudio` check in
-   `src/lib/api/admin.functions.ts` — consumes the same `Session` shape and
-   keeps working.
-4. Roles come from `User.role` (`CUSTOMER | STUDIO | ADMIN`). Promote your first
-   studio user with SQL or Prisma Studio (`bunx prisma studio`).
-
-Provider descriptors and the role rule live in `src/lib/auth/config.ts`.
+Development-only staff demo accounts remain available at `/admin/signin` when
+no staff credentials are configured. Customer environment/demo accounts are no
+longer supported; customers register their own accounts. Production never enables demo credentials.
 
 ## 3b. Wire up image uploads (UploadThing)
 

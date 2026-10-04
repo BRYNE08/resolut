@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS "Product" (
   "badge" TEXT,
   "body" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
   "priceCents" INTEGER,
+  "images" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
   "image" TEXT NOT NULL,
   "imageAlt" TEXT NOT NULL,
   "detailImage" TEXT NOT NULL,
@@ -140,6 +141,15 @@ CREATE TABLE IF NOT EXISTS "Account" (
   "id_token" TEXT,
   "session_state" TEXT
 );
+
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "passwordHash" TEXT;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "sessionVersion" INTEGER NOT NULL DEFAULT 0;
+CREATE TABLE IF NOT EXISTS "AuthRateLimit" (
+  "key" TEXT PRIMARY KEY,
+  "count" INTEGER NOT NULL DEFAULT 0,
+  "expiresAt" TIMESTAMP(3) NOT NULL
+);
+CREATE INDEX IF NOT EXISTS "AuthRateLimit_expiresAt_idx" ON "AuthRateLimit"("expiresAt");
 CREATE UNIQUE INDEX IF NOT EXISTS "Account_provider_providerAccountId_key" ON "Account"("provider","providerAccountId");
 
 CREATE TABLE IF NOT EXISTS "Session" (

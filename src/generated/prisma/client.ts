@@ -87,6 +87,11 @@ export type ContactMessage = Prisma.ContactMessageModel
  */
 export type User = Prisma.UserModel
 /**
+ * Model AuthRateLimit
+ * Shared, expiring authentication attempt counters. Keys are HMACs, never raw IPs/emails.
+ */
+export type AuthRateLimit = Prisma.AuthRateLimitModel
+/**
  * Model Account
  * 
  */
@@ -104,6 +109,7 @@ export type VerificationToken = Prisma.VerificationTokenModel
 /**
  * Model CustomerProfile
  * Saved contact + delivery details for a signed-in customer.
- * Keyed by the account (session) email so the row survives contact-email edits.
+ * New rows use "customer:<userId>" in the legacy accountEmail key column.
+ * Older email-keyed rows can be read only after verifying ownership of that email.
  */
 export type CustomerProfile = Prisma.CustomerProfileModel

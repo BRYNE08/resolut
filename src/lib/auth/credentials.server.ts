@@ -14,7 +14,6 @@ type Account = SessionUser & { password: string };
 export const DEMO_ACCOUNTS: { email: string; password: string; role: string }[] = [
   { email: "studio@resolutdesign.co.za", password: "resolut-studio", role: "studio" },
   { email: "admin@resolutdesign.co.za", password: "resolut-admin", role: "admin" },
-  { email: "customer@example.com", password: "resolut-customer", role: "customer" },
 ];
 
 function accounts(env: Record<string, string | undefined>): Account[] {
@@ -39,17 +38,9 @@ function accounts(env: Record<string, string | undefined>): Account[] {
     });
   }
 
-  if (env["CUSTOMER_EMAIL"] && env["CUSTOMER_PASSWORD"]) {
-    list.push({
-      id: "customer-user",
-      name: env["CUSTOMER_NAME"] ?? "Customer",
-      email: env["CUSTOMER_EMAIL"].toLowerCase(),
-      password: env["CUSTOMER_PASSWORD"],
-      role: "customer",
-    });
-  }
-
   if (list.length > 0) return list;
+
+  if (env["NODE_ENV"] === "production") return [];
 
   // Demo accounts — only used while no credentials are configured.
   return [
@@ -66,13 +57,6 @@ function accounts(env: Record<string, string | undefined>): Account[] {
       email: DEMO_ACCOUNTS[1]!.email,
       password: DEMO_ACCOUNTS[1]!.password,
       role: "admin",
-    },
-    {
-      id: "demo-customer-user",
-      name: "Demo Customer",
-      email: DEMO_ACCOUNTS[2]!.email,
-      password: DEMO_ACCOUNTS[2]!.password,
-      role: "customer",
     },
   ];
 }

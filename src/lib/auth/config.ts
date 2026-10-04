@@ -1,14 +1,4 @@
-/**
- * Auth.js configuration — shaped exactly the way `@auth/core` / NextAuth
- * expects, but not yet wired to a live provider. Nothing here performs network
- * calls, so the app runs with zero credentials.
- *
- * To go live:
- *   1. bun add @auth/core @auth/prisma-adapter
- *   2. set AUTH_SECRET plus provider credentials (see .env.example)
- *   3. in src/lib/auth/session.server.ts, replace `readDemoSession()` with the
- *      Auth.js session read — the rest of the app already consumes `Session`.
- */
+/** Public session shapes and customer provider availability. No secrets leave this module. */
 
 export type UserRole = "customer" | "studio" | "admin";
 
@@ -18,6 +8,10 @@ export type SessionUser = {
   email: string;
   image?: string;
   role: UserRole;
+  /** Provider currently proves ownership of this email, not just the account identity. */
+  emailVerified?: boolean;
+  sessionVersion?: number;
+  hasPassword?: boolean;
 };
 
 export type Session = {
@@ -34,37 +28,49 @@ export type ProviderDescriptor = {
 
 /** Which providers the deployment has credentials for. */
 export function listProviders(env: Record<string, string | undefined> = {}): ProviderDescriptor[] {
+  const origin = env["PUBLIC_SITE_URL"] || env["AUTH_URL"];
+  const ready = Boolean(
+    env["DATABASE_URL"] &&
+    (env["AUTH_SECRET"]?.length ?? 0) >= 32 &&
+    (env["NODE_ENV"] !== "production" || origin?.startsWith("https://")),
+  );
   return [
     {
       id: "google",
       name: "Google",
       type: "oauth",
-      configured: Boolean(env["AUTH_GOOGLE_ID"] && env["AUTH_GOOGLE_SECRET"]),
+      configured: ready && Boolean(env["AUTH_GOOGLE_ID"] && env["AUTH_GOOGLE_SECRET"]),
     },
     {
-      id: "github",
-      name: "GitHub",
+      id: "apple",
+      name: "Apple",
       type: "oauth",
-      configured: Boolean(env["AUTH_GITHUB_ID"] && env["AUTH_GITHUB_SECRET"]),
-    },
-    {
-      id: "resend",
-      name: "Email link",
-      type: "email",
-      configured: Boolean(env["AUTH_RESEND_KEY"]),
+      configured:
+        ready &&
+        Boolean(
+          env["AUTH_APPLE_ID"] &&
+          env["AUTH_APPLE_TEAM_ID"] &&
+          env["AUTH_APPLE_KEY_ID"] &&
+          env["AUTH_APPLE_PRIVATE_KEY"] &&
+          (env["PUBLIC_SITE_URL"] || env["AUTH_URL"])?.startsWith("https://"),
+        ),
     },
   ];
 }
 
-/** True once Auth.js has enough configuration to run for real. */
+/** True when at least one customer identity provider is configured. */
 export function isAuthConfigured(env: Record<string, string | undefined> = {}) {
-  return Boolean(env["AUTH_SECRET"]) && listProviders(env).some((p) => p.configured);
+  return (
+    (env["AUTH_SECRET"]?.length ?? 0) >= 32 &&
+    (Boolean(env["DATABASE_URL"]) || listProviders(env).some((p) => p.configured))
+  );
 }
 
 export const AUTH_ROUTES = {
-  signIn: "/admin",
+  signIn: "/signin",
+  studioSignIn: "/admin/signin",
   signOut: "/",
-  callback: "/api/auth/callback",
+  callback: "/api/auth/customer",
 } as const;
 
 export function canAccessStudio(session: Session) {

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { productQuery, productsQuery } from "@/lib/api/queries";
@@ -45,6 +46,10 @@ function ProductPage() {
   const { data: catalogue } = useSuspenseQuery(productsQuery);
   const product = data.product!;
 
+  const images = product.images?.length ? product.images : [...new Set([product.image, product.detailImage])];
+  const [selection, setSelection] = useState({ slug, index: 0 });
+  const activeIndex = selection.slug === slug ? selection.index : 0;
+
   const others = catalogue.products.filter((p) => p.slug !== product.slug);
 
   return (
@@ -68,17 +73,12 @@ function ProductPage() {
               <div className="frame">
                 {product.badge ? <span className="badge">{product.badge}</span> : null}
                 <div className="arch-img arch">
-                  <img src={product.image} alt={product.imageAlt} />
+                  <img src={images[activeIndex] || images[0]} alt={product.imageAlt} />
                 </div>
               </div>
-              <div className="pdp-thumbs">
-                <div className="arch-img arch">
-                  <img src={product.image} alt={`${product.name}, full view`} />
-                </div>
-                <div className="arch-img arch">
-                  <img src={product.detailImage} alt={`${product.name}, surface detail`} />
-                </div>
-              </div>
+              {images.length > 1 && <div className="pdp-thumbs">
+                {images.map((image, index) => <button key={index} type="button" aria-label={`View ${product.name} image ${index + 1}`} aria-pressed={activeIndex === index} onClick={() => setSelection({ slug, index })} style={{ padding: 0, border: activeIndex === index ? "2px solid currentColor" : "2px solid transparent", background: "transparent", cursor: "pointer" }}><div className="arch-img arch"><img src={image} alt={`${product.name}, view ${index + 1}`} loading="lazy" /></div></button>)}
+              </div>}
             </div>
 
             <div className="pdp-copy">

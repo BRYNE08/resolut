@@ -1,0 +1,131 @@
+.customer-providers {
+  display: grid;
+  gap: 12px;
+}
+.customer-provider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 18px;
+  border: 1px solid #747775;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f1f1f;
+  font:
+    500 15px/1.3 "Hanken Grotesk",
+    sans-serif;
+  cursor: pointer;
+}
+.customer-provider.apple {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+.customer-provider:focus-visible {
+  outline: 3px solid #8a4b27;
+  outline-offset: 3px;
+}
+.customer-provider:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.customer-provider small {
+  flex-basis: 100%;
+  font-size: 12px;
+  font-weight: 400;
+}
+.customer-auth-note {
+  margin: 22px 0 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #5a5a5a;
+}
+.customer-auth-switch {
+  margin: 26px 0 0;
+  font-size: 14px;
+}
+.customer-signin a:not(.signin-back) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.customer-staff-link {
+  margin-top: 34px;
+  padding-top: 20px;
+  border-top: 1px solid #d7d1c8;
+  font-size: 12px;
+}
+.customer-auth-message {
+  margin-top: 18px;
+}
+
+.customer-password-form fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.customer-field {
+  display: block;
+  margin: 0 0 18px;
+}
+.customer-field > span {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+.customer-field input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #b7b9ae;
+  background: white;
+  padding: 12px;
+  color: #263328;
+  border-radius: 4px;
+}
+.customer-field small {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+}
+.customer-password-input {
+  display: flex;
+  gap: 8px;
+}
+.customer-password-input input {
+  min-width: 0;
+  flex: 1;
+}
+.customer-password-input button {
+  padding: 8px;
+  border: 1px solid #b7b9ae;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+.customer-password-form .customer-provider {
+  width: 100%;
+  justify-content: center;
+}
+.customer-auth-divider {
+  text-align: center;
+  margin: 24px 0;
+  font-size: 13px;
+}
+.customer-recovery {
+  min-height: 80vh;
+  padding: 64px 24px;
+  display: grid;
+  place-items: center;
+}
+.customer-recovery .signin-form {
+  width: 100%;
+  max-width: 480px;
+}
+.customer-signin .signin-form-wrap {
+  padding-top: 48px;
+  padding-bottom: 48px;
+}

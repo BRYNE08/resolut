@@ -118,7 +118,11 @@ export function readStoredCart(): CartItems {
 }
 
 export function useCartItems(): CartItems {
-  return useSyncExternalStore(cartStore.subscribe, cartStore.getSnapshot, cartStore.getServerSnapshot);
+  return useSyncExternalStore(
+    cartStore.subscribe,
+    cartStore.getSnapshot,
+    cartStore.getServerSnapshot,
+  );
 }
 
 export function useCartCount(): number {
@@ -137,16 +141,42 @@ export type PricedLine = {
 /** Join client cart quantities with server-owned pricing. */
 export function priceCart(
   items: CartItems,
-  products: { slug: string; name: string; price: number | null; image: string }[],
-): { lines: PricedLine[]; subtotal: number; freeShipping: boolean; shortfall: number } {
+  products: {
+    slug: string;
+    name: string;
+    price: number | null;
+    image: string;
+    published?: boolean;
+  }[],
+): {
+  unavailableSlugs: string[];
+  lines: PricedLine[];
+  subtotal: number;
+  freeShipping: boolean;
+  shortfall: number;
+} {
   const lines = Object.entries(items).flatMap(([slug, quantity]) => {
     const product = products.find((p) => p.slug === slug);
-    if (!product || product.price == null) return [];
+    if (
+      !product ||
+      product.published === false ||
+      product.price == null ||
+      !Number.isFinite(product.price) ||
+      product.price <= 0 ||
+      !Number.isInteger(quantity) ||
+      quantity < 1 ||
+      quantity > 99
+    )
+      return [];
     return [{ slug, name: product.name, quantity, unitPrice: product.price, image: product.image }];
   });
-  const subtotal = lines.reduce((s, l) => s + l.unitPrice * l.quantity, 0);
+  const unavailableSlugs = Object.keys(items).filter(
+    (slug) => !lines.some((line) => line.slug === slug),
+  );
+  const subtotal = lines.reduce((s, l) => s + Math.round(l.unitPrice * 100) * l.quantity, 0) / 100;
   return {
     lines,
+    unavailableSlugs,
     subtotal,
     freeShipping: subtotal >= FREE_SHIPPING_THRESHOLD,
     shortfall: Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal),
