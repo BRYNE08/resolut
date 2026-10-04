@@ -67,7 +67,7 @@ export const Route = createFileRoute("/admin")({
   errorComponent: ({ error }) => (
     <div className="admin-gate" role="alert">
       <h1>Studio unavailable</h1>
-      <p>{error.message}</p>
+      <p>{error instanceof Error ? error.message : "Something went wrong. Please try again."}</p>
       <Link to="/">Back to the storefront</Link>
     </div>
   ),

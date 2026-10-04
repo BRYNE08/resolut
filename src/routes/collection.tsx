@@ -52,7 +52,7 @@ export const Route = createFileRoute("/collection")({
     <main className="pdp">
       <div className="wrap" role="alert">
         <h1>Collection unavailable</h1>
-        <p>{error.message}</p>
+        <p>{error instanceof Error ? error.message : "Something went wrong. Please try again."}</p>
       </div>
     </main>
   ),
