@@ -46,55 +46,85 @@ export const startPayfastCheckout = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { getRepository } = await import("@/lib/data/repository.server");
     const { ensureCartId } = await import("@/lib/data/cart-session.server");
-    const { buildCheckout, checkoutOrigin, PayfastConfigurationError } = await import("@/lib/payments/payfast.server");
+    const { buildCheckout, checkoutOrigin, PayfastConfigurationError } =
+      await import("@/lib/payments/payfast.server");
     const { issueOrderAccessToken } = await import("@/lib/auth/order-access.server");
     const { authSecret } = await import("@/lib/auth/secret.server");
     const { readSession } = await import("@/lib/auth/session.server");
 
     setResponseHeader("Cache-Control", "private, no-store");
-    authSecret();
-    let origin: string;
+    const diagnosticId = crypto.randomUUID();
+    let stage = "configuration";
     try {
-      origin = checkoutOrigin(siteOrigin());
-    } catch (error) {
-      if (error instanceof PayfastConfigurationError) {
-        return { ok: false as const, message: error.message };
+      stage = "configuration";
+      authSecret();
+      let origin: string;
+      try {
+        origin = checkoutOrigin(siteOrigin());
+      } catch (error) {
+        if (error instanceof PayfastConfigurationError) {
+          return { ok: false as const, message: error.message };
+        }
+        throw error;
       }
-      throw error;
-    }
 
-    const repo = await getRepository();
-    const { session } = await readSession();
-    let order;
-    try {
-      order = await repo.createOrder({ ...data, userId: session?.user.id });
+      stage = "repository";
+      const repo = await getRepository();
+      stage = "session";
+      const { session } = await readSession();
+      let order;
+      try {
+        stage = "create-order";
+        order = await repo.createOrder({ ...data, userId: session?.user.id });
+      } catch (error) {
+        if (error instanceof ProductAvailabilityError)
+          return { ok: false as const, message: error.message };
+        throw error;
+      }
+
+      const itemName =
+        order.lines.length === 1
+          ? `Resolut ${order.lines[0]!.name}`
+          : `Resolut order ${order.reference}`;
+
+      stage = "payment-form";
+      const payment = buildCheckout({
+        origin,
+        reference: order.reference,
+        accessToken: issueOrderAccessToken(order.reference),
+        amount: order.total,
+        itemName,
+        itemDescription: order.lines.map((l) => `${l.quantity} x ${l.name}`).join(", "),
+        customerName: order.customerName,
+        email: order.email,
+        phone: data.phone,
+      });
+
+      // Clear the cart only after the payment request has been built successfully.
+      // Cart cleanup must not turn a successfully saved order into a checkout failure.
+      try {
+        await repo.clearCart(await ensureCartId());
+      } catch {
+        console.warn("[resolut checkout] Cart cleanup failed after order creation.");
+      }
+
+      return { ok: true as const, source: repo.name, order, payment };
     } catch (error) {
-      if (error instanceof ProductAvailabilityError)
-        return { ok: false as const, message: error.message };
-      throw error;
+      // Never log customer input, credentials, database URLs or raw error messages.
+      const code =
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        typeof error.code === "string" &&
+        /^[A-Z0-9_]{1,40}$/.test(error.code)
+          ? error.code
+          : undefined;
+      console.error("[resolut checkout] Failed", { diagnosticId, stage, code });
+      return {
+        ok: false as const,
+        message: `We couldn’t start your payment. Please contact the studio with reference ${diagnosticId}.`,
+      };
     }
-
-    const itemName =
-      order.lines.length === 1
-        ? `Resolut ${order.lines[0]!.name}`
-        : `Resolut order ${order.reference}`;
-
-    const payment = buildCheckout({
-      origin,
-      reference: order.reference,
-      accessToken: issueOrderAccessToken(order.reference),
-      amount: order.total,
-      itemName,
-      itemDescription: order.lines.map((l) => `${l.quantity} x ${l.name}`).join(", "),
-      customerName: order.customerName,
-      email: order.email,
-      phone: data.phone,
-    });
-
-    // Clear the cart only after the payment request has been built successfully.
-    await repo.clearCart(await ensureCartId()).catch(() => undefined);
-
-    return { ok: true as const, source: repo.name, order, payment };
   });
 
 /** POST keeps guest credentials out of request URLs and intermediary caches. */
