@@ -224,6 +224,7 @@ export interface ResolutRepository {
   updateOrderStatus(reference: string, status: OrderStatus): Promise<Order>;
   joinWaitlist(input: { email: string; label: string }): Promise<{ ok: true }>;
   listWaitlist(): Promise<WaitlistEntry[]>;
+  createMessage(input: { name: string; email: string; message: string }): Promise<{ ok: true }>;
   listMessages(): Promise<ContactMessage[]>;
   setMessageHandled(id: string, handled: boolean): Promise<ContactMessage>;
   listJobs(): Promise<ProductionJob[]>;

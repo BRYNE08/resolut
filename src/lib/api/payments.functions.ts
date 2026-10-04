@@ -46,14 +46,22 @@ export const startPayfastCheckout = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { getRepository } = await import("@/lib/data/repository.server");
     const { ensureCartId } = await import("@/lib/data/cart-session.server");
-    const { buildCheckout } = await import("@/lib/payments/payfast.server");
+    const { buildCheckout, checkoutOrigin, PayfastConfigurationError } = await import("@/lib/payments/payfast.server");
     const { issueOrderAccessToken } = await import("@/lib/auth/order-access.server");
     const { authSecret } = await import("@/lib/auth/secret.server");
     const { readSession } = await import("@/lib/auth/session.server");
 
     setResponseHeader("Cache-Control", "private, no-store");
     authSecret();
-    const origin = siteOrigin();
+    let origin: string;
+    try {
+      origin = checkoutOrigin(siteOrigin());
+    } catch (error) {
+      if (error instanceof PayfastConfigurationError) {
+        return { ok: false as const, message: error.message };
+      }
+      throw error;
+    }
 
     const repo = await getRepository();
     const { session } = await readSession();
@@ -65,9 +73,6 @@ export const startPayfastCheckout = createServerFn({ method: "POST" })
         return { ok: false as const, message: error.message };
       throw error;
     }
-
-    // The order is persisted, so the cart's job is done.
-    await repo.clearCart(await ensureCartId()).catch(() => undefined);
 
     const itemName =
       order.lines.length === 1
@@ -85,6 +90,9 @@ export const startPayfastCheckout = createServerFn({ method: "POST" })
       email: order.email,
       phone: data.phone,
     });
+
+    // Clear the cart only after the payment request has been built successfully.
+    await repo.clearCart(await ensureCartId()).catch(() => undefined);
 
     return { ok: true as const, source: repo.name, order, payment };
   });

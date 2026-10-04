@@ -2,6 +2,7 @@ import { template as customerAuth } from "./customer-auth";
 import type { ComponentType } from "react";
 import { template as orderConfirmation } from "./order-confirmation";
 import { template as orderStatusUpdate } from "./order-status-update";
+import { template as adminPurchase } from "./admin-purchase";
 
 export interface TemplateEntry {
   component: ComponentType<any>;
@@ -24,4 +25,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   "customer-auth": customerAuth,
   "order-confirmation": orderConfirmation,
   "order-status-update": orderStatusUpdate,
+  "admin-purchase": adminPurchase,
 };

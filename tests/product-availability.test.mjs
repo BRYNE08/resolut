@@ -125,7 +125,8 @@ test("Prisma adapter validates before any order write and locks product rows ins
   };
   const repo = createPrismaRepository({
     ...tx,
-    $transaction: async (callback) => {
+    $transaction: async (callback, options) => {
+      assert.deepEqual(options, { maxWait: 10_000, timeout: 15_000 });
       inTransaction = true;
       try {
         return await callback(tx);

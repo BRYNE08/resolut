@@ -108,7 +108,7 @@ function CollectionPage() {
               <h1>Every piece, in one room</h1>
               <p className="pdp-intro ital">
                 {all.length} pieces · {forSale} available to order · each printed, finished and
-                wired in Johannesburg.
+                wired in King Williams Town
               </p>
             </header>
 

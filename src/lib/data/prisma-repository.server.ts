@@ -306,6 +306,11 @@ export function createPrismaRepository(prisma: AnyPrisma): ResolutRepository {
       }));
     },
 
+    async createMessage(input) {
+      await prisma.contactMessage.create({ data: input });
+      return { ok: true as const };
+    },
+
     async listMessages(): Promise<ContactMessage[]> {
       const rows = await prisma.contactMessage.findMany({ orderBy: { createdAt: "desc" } });
       return rows.map((r: AnyPrisma) => ({
@@ -477,7 +482,7 @@ export function createPrismaRepository(prisma: AnyPrisma): ResolutRepository {
           include: { items: { include: { product: true } } },
         });
         return toOrder(row);
-      });
+      }, { maxWait: 10_000, timeout: 15_000 });
     },
 
     async joinWaitlist({ email, label }) {

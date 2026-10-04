@@ -71,6 +71,30 @@ export async function sendOrderConfirmationEmail(order: Order) {
   )
 }
 
+export async function sendAdminPurchaseEmail(order: Order, payment: { transactionId: string; sandbox: boolean }) {
+  await safeSend(
+    () => sendTemplateEmail('admin-purchase', 'james@resolutdesign.co.za', {
+      idempotencyKey: `admin-purchase-${order.reference}`,
+      replyTo: order.email,
+      templateData: {
+        reference: order.reference,
+        customerName: order.customerName,
+        customerEmail: order.email,
+        phone: order.phone,
+        total: ZAR(order.total),
+        transactionId: payment.transactionId,
+        sandbox: payment.sandbox,
+        address: addressOf(order),
+        deliveryNotes: order.shipping?.deliveryNotes,
+        lines: order.lines.map((line) => ({
+          name: line.name, quantity: line.quantity, lineTotal: ZAR(line.unitPrice * line.quantity),
+        })),
+      },
+    }),
+    `admin purchase ${order.reference}`,
+  )
+}
+
 export async function sendOrderStatusEmail(order: Order, status: OrderStatus) {
   const copy = STATUS_COPY[status]
   if (!copy) return

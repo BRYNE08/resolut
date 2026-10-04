@@ -460,6 +460,11 @@ export function createMockRepository(): ResolutRepository {
       return state.waitlistEntries;
     },
 
+    async createMessage(input) {
+      state.messages = [{ ...input, id: `m${state.nextId++}`, handled: false, createdAt: today() }, ...state.messages];
+      return { ok: true as const };
+    },
+
     async listMessages(): Promise<ContactMessage[]> {
       return state.messages;
     },

@@ -54,7 +54,7 @@ function Hero() {
           the moment it's switched on.
         </p>
         <div className="hero-actions">
-          <a href="#cornice" className="btn btn-primary">
+          <a href="https://www.resolutdesign.co.za/product/cornice-2" className="btn btn-primary">
             Meet Cornice {ARROW}
           </a>
           <a href="#collection" className="btn btn-ghost">

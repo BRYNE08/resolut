@@ -221,6 +221,9 @@ function CheckoutPage() {
                   Your order is saved. PayFast&rsquo;s secure page is opening now to complete
                   payment. If nothing happens, use the button below.
                 </p>
+                {orderMutation.data?.ok && orderMutation.data.payment.sandbox ? (
+                  <p className="co-note">Sandbox checkout: this is a test payment and no money will be charged.</p>
+                ) : null}
                 {orderMutation.data?.ok ? (
                   <button
                     className="btn btn-primary"

@@ -32,13 +32,13 @@ export function StorefrontNav({ home = false }: { home?: boolean }) {
         <Link to="/collection" search={{ availability: "all", sort: "curated" }} onClick={closeMenu}>
           Collection
         </Link>
-        <a href={hash("cornice")} onClick={closeMenu}>Cornice</a>
-        <a href={hash("volute")} onClick={closeMenu}>Volute</a>
-        <a href={hash("philosophy")} onClick={closeMenu}>Philosophy</a>
+        <a href="https://www.resolutdesign.co.za/product/cornice-2" onClick={closeMenu}>Cornice</a>
+        <a href="https://www.resolutdesign.co.za/product/volute-2" onClick={closeMenu}>Volute</a>
+        {/* <a href={hash("philosophy")} onClick={closeMenu}>Philosophy</a> */}
         <a href={hash("process")} onClick={closeMenu}>Process</a>
         <Link to="/shipping" onClick={closeMenu}>Shipping</Link>
-        <Link to="/account" onClick={closeMenu}>Account</Link>
-        <a href={hash("contact")} onClick={closeMenu}>Contact</a>
+        {/* <Link to="/account" onClick={closeMenu}>Account</Link> */}
+        <Link to="/contact" onClick={closeMenu}>Contact</Link>
         <button className="nav-cart" aria-label="Open cart" onClick={() => uiStore.openCart()}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
             <path d="M6 6h15l-1.5 9h-12z" />

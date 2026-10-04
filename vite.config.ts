@@ -18,6 +18,9 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    server: {
+      allowedHosts: ["2671-41-13-192-56.ngrok-free.app"],
+    },
     resolve: {
       alias: {
         "entities/lib/decode.js": path.resolve(

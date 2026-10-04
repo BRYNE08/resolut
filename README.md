@@ -141,14 +141,16 @@ Checkout is a real PayFast integration, not a mock:
    against PayFast, compares the amount to the stored total, and only then
    flips the order to `PAID` (or `CANCELLED`).
 
-With no credentials set it runs against **PayFast's public sandbox merchant**,
-so the whole flow works immediately. Go live by setting:
+With no credentials set it runs against **PayFast's public sandbox merchant**.
+Local sandbox return links use `127.0.0.1` instead of `localhost` and omit the
+unreachable notification URL. To test automatic payment confirmation, set
+`PUBLIC_SITE_URL` to your public development tunnel URL. Go live by setting:
 
 ```env
 PAYFAST_MERCHANT_ID=
 PAYFAST_MERCHANT_KEY=
 PAYFAST_PASSPHRASE=      # set the same passphrase in your PayFast dashboard
-PAYFAST_SANDBOX=false    # optional override; auto-detected from the keys above
+PAYFAST_SANDBOX=false    # true for your own sandbox merchant credentials
 PUBLIC_SITE_URL=https://your-domain.com   # used for return/cancel/notify URLs
 ```
 

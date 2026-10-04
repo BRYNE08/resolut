@@ -44,11 +44,18 @@ export const Route = createFileRoute("/api/public/payfast-itn")({
 
         if (order.status === "await") {
           const updated = await repo.updateOrderStatus(order.reference, result.status);
-          const { sendOrderConfirmationEmail, sendOrderStatusEmail } = await import(
+          const { sendOrderConfirmationEmail, sendOrderStatusEmail, sendAdminPurchaseEmail } = await import(
             "@/lib/email-templates/order-emails.server"
           );
           if (result.status === "paid") {
-            await sendOrderConfirmationEmail(updated);
+            const { payfastConfig } = await import("@/lib/payments/payfast.server");
+            await Promise.all([
+              sendOrderConfirmationEmail(updated),
+              sendAdminPurchaseEmail(updated, {
+                transactionId: result.pfPaymentId,
+                sandbox: payfastConfig().sandbox,
+              }),
+            ]);
           } else {
             await sendOrderStatusEmail(updated, updated.status);
           }
