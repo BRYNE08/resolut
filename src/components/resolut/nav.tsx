@@ -34,7 +34,7 @@ export function StorefrontNav({ home = false }: { home?: boolean }) {
         </Link>
         <a href="https://www.resolutdesign.co.za/product/cornice-2" onClick={closeMenu}>Cornice</a>
         <a href="https://www.resolutdesign.co.za/product/volute-2" onClick={closeMenu}>Volute</a>
-        {/* <a href={hash("philosophy")} onClick={closeMenu}>Philosophy</a> */}
+        <Link to="/about" onClick={closeMenu}>About</Link>
         <a href={hash("process")} onClick={closeMenu}>Process</a>
         <Link to="/shipping" onClick={closeMenu}>Shipping</Link>
         {/* <Link to="/account" onClick={closeMenu}>Account</Link> */}

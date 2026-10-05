@@ -6,7 +6,7 @@ import { StorefrontChrome } from "@/components/resolut/chrome";
 import { orderQuery } from "@/lib/api/queries";
 import type { Order, OrderStatus } from "@/lib/data/types";
 import { ZAR } from "@/lib/money";
-import { FREE_SHIPPING_THRESHOLD } from "@/lib/store/cart-store";
+import { LEGAL_DOCS } from "@/lib/resolut/legal";
 
 const TITLE = "Shipping & Order Tracking — Resolut";
 const DESCRIPTION =
@@ -29,19 +29,28 @@ export const Route = createFileRoute("/shipping")({
 /** Made-to-order timeline, in business-day offsets from the order date. */
 const STAGES: { key: OrderStatus | "delivered"; label: string; note: string; days: number }[] = [
   { key: "paid", label: "Order confirmed", note: "Payment cleared through PayFast.", days: 0 },
-  { key: "making", label: "In the workshop", note: "Printed, cured and hand-assembled.", days: 3 },
-  { key: "shipped", label: "Dispatched", note: "Courier collects and tracking is emailed.", days: 16 },
-  { key: "delivered", label: "Delivered", note: "Signed for at your address.", days: 19 },
+  {
+    key: "making",
+    label: "In the workshop",
+    note: "Printed, finished and hand-assembled.",
+    days: 3,
+  },
+  {
+    key: "shipped",
+    label: "Dispatched",
+    note: "Courier collects and tracking is emailed.",
+    days: 15,
+  },
+  { key: "delivered", label: "Delivered", note: "Signed for at your address.", days: 20 },
 ];
 
-const ORDER_OF: Record<string, number> = { await: -1, paid: 0, making: 1, shipped: 2, cancelled: -1 };
-
-const RATES = [
-  { region: "Eastern Cape (local)", days: "1–2 business days", cost: 120 },
-  { region: "Major metros — JHB, CPT, DBN, PTA", days: "2–3 business days", cost: 180 },
-  { region: "Regional towns", days: "3–5 business days", cost: 240 },
-  { region: "Outlying & farm addresses", days: "4–6 business days", cost: 320 },
-];
+const ORDER_OF: Record<string, number> = {
+  await: -1,
+  paid: 0,
+  making: 1,
+  shipped: 2,
+  cancelled: -1,
+};
 
 function addBusinessDays(from: Date, days: number) {
   const d = new Date(from);
@@ -108,13 +117,17 @@ function ShippingPage() {
                     onChange={(e) => setInput(e.target.value)}
                     autoComplete="off"
                   />
-                  <button className="btn btn-primary" type="submit" disabled={input.trim().length < 3}>
+                  <button
+                    className="btn btn-primary"
+                    type="submit"
+                    disabled={input.trim().length < 3}
+                  >
                     Track
                   </button>
                 </div>
                 <p className="co-note">
-                  Sign in with the account matching your order email to look up a reference.
-                  Guest customers: open the private order link in your latest email.
+                  Sign in with the account matching your order email to look up a reference. Guest
+                  customers: open the private order link in your latest email.
                 </p>
               </form>
 
@@ -122,65 +135,21 @@ function ShippingPage() {
                 <p className="ship-status">Looking up {reference}…</p>
               ) : reference && (isError || !order) ? (
                 <p className="ship-status ship-status-miss">
-                  This order is unavailable. Check the reference and <Link to="/signin">sign in</Link>,
-                  or use your private email link. For help, <a href="mailto:orders@resolutdesign.co.za">contact the studio</a>.
+                  This order is unavailable. Check the reference and{" "}
+                  <Link to="/signin">sign in</Link>, or use your private email link. For help,{" "}
+                  <a href="mailto:orders@resolutdesign.co.za">contact the studio</a>.
                 </p>
               ) : order ? (
                 <OrderTimeline order={order} />
               ) : null}
             </section>
 
-            <section className="ship-block" aria-labelledby="ship-rates">
-              <h2 id="ship-rates">Delivery costs</h2>
-              <p className="co-note">
-                Insured courier, nationwide within South Africa. Orders over{" "}
-                {ZAR(FREE_SHIPPING_THRESHOLD)} ship free.
-              </p>
-              <table className="ship-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Destination</th>
-                    <th scope="col">After dispatch</th>
-                    <th scope="col">Cost</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {RATES.map((r) => (
-                    <tr key={r.region}>
-                      <td>{r.region}</td>
-                      <td>{r.days}</td>
-                      <td>{ZAR(r.cost)}</td>
-                    </tr>
-                  ))}
-                  <tr className="ship-table-free">
-                    <td>Any address, order over {ZAR(FREE_SHIPPING_THRESHOLD)}</td>
-                    <td>As above</td>
-                    <td>Free</td>
-                  </tr>
-                </tbody>
-              </table>
-              <p className="co-note">
-                Pieces travel in braced, recyclable crates. We currently deliver within South Africa
-                only; for export enquiries, write to hello@resolutdesign.co.za.
-              </p>
-            </section>
-
-            <section className="ship-block" aria-labelledby="ship-when">
-              <h2 id="ship-when">What to expect, and when</h2>
-              <ol className="ship-stages">
-                {STAGES.map((s, i) => (
-                  <li key={s.key}>
-                    <span className="num">0{i + 1}</span>
-                    <div>
-                      <strong>{s.label}</strong>
-                      <span>{s.note}</span>
-                    </div>
-                    <em>
-                      {s.days === 0 ? "Day 0" : `~${s.days} business days`}
-                    </em>
-                  </li>
-                ))}
-              </ol>
+            <section className="ship-block" aria-labelledby="ship-policy">
+              <h2 id="ship-policy">Shipping &amp; Delivery</h2>
+              <div
+                className="legal-body"
+                dangerouslySetInnerHTML={{ __html: LEGAL_DOCS.shipping.html }}
+              />
               <div className="sig-actions">
                 <Link
                   className="btn btn-ghost"
@@ -250,7 +219,11 @@ function OrderTimeline({ order }: { order: Order }) {
       </ol>
 
       <div className="sig-actions">
-        <Link className="btn btn-primary" to="/order/$reference" params={{ reference: order.reference }}>
+        <Link
+          className="btn btn-primary"
+          to="/order/$reference"
+          params={{ reference: order.reference }}
+        >
           Open order page
         </Link>
       </div>

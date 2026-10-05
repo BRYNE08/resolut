@@ -21,12 +21,12 @@ export function StorefrontFooter({ home = false }: { home?: boolean }) {
           <div className="foot-col">
             <h4>Explore</h4>
             <a href={hash("collection")}>Collection</a>
-            <a href={hash("philosophy")}>Philosophy</a>
+            <Link to="/about" hash="philosophy">Philosophy</Link>
             <a href={hash("process")}>Process</a>
           </div>
           <div className="foot-col">
             <h4>Company</h4>
-            <a href={hash("philosophy")}>About</a>
+            <Link to="/about">About</Link>
             <Link to="/contact">Contact</Link>
             <Link to="/shipping">Shipping &amp; tracking</Link>
           </div>

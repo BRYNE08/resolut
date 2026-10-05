@@ -7,9 +7,9 @@ import { ZAR } from "@/lib/money";
 /** Made-to-order timeline, in business-day offsets from the order date. */
 export const STAGES: { key: OrderStatus | "delivered"; label: string; note: string; days: number }[] = [
   { key: "paid", label: "Order confirmed", note: "Payment cleared through PayFast.", days: 0 },
-  { key: "making", label: "In the workshop", note: "Printed, cured and hand-assembled.", days: 3 },
-  { key: "shipped", label: "Dispatched", note: "Courier collects and tracking is emailed.", days: 16 },
-  { key: "delivered", label: "Delivered", note: "Signed for at your address.", days: 19 },
+  { key: "making", label: "In the workshop", note: "Printed, finished and hand-assembled.", days: 3 },
+  { key: "shipped", label: "Dispatched", note: "Courier collects and tracking is emailed.", days: 15 },
+  { key: "delivered", label: "Delivered", note: "Signed for at your address.", days: 20 },
 ];
 
 const ORDER_OF: Record<string, number> = { await: -1, paid: 0, making: 1, shipped: 2, cancelled: -1 };

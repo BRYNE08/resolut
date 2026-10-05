@@ -1,3 +1,4 @@
+import { ABOUT_PARAGRAPHS } from "@/lib/resolut/about-content";
 /**
  * Home page sections, ported from the original static HTML to React.
  * Product data comes from TanStack Query (primed by the index route loader);
@@ -96,16 +97,7 @@ function Philosophy() {
           </p>
         </Reveal>
         <Reveal className="phil-body">
-          <p>
-            Resolut begins where most lighting stops. Through intentional form, refined structure,
-            and controlled illumination, each piece is engineered to shape light and define the
-            space around it.
-          </p>
-          <p>
-            Nothing is excessive. Inspired by modern architecture, the work balances strong
-            geometric structure with soft, deliberate illumination — every proportion considered,
-            every detail resolved.
-          </p>
+          {ABOUT_PARAGRAPHS.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
           <p className="phil-sign">— Crafted to be seen. Designed to be felt.</p>
         </Reveal>
       </div>
@@ -433,8 +425,8 @@ const TRUST_ITEMS = [
         <path d="M3 7v6l9 4 9-4V7" />
       </>
     ),
-    title: "Recycled material",
-    body: "Printed in a recycled PLA composite — premium feel, lighter footprint.",
+    title: "Plant-based material",
+    body: "Printed in bone-white PLA, a plant-based material that diffuses a soft, even glow.",
   },
   {
     icon: (

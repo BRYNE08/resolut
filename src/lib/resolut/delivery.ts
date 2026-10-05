@@ -1,6 +1,6 @@
 /** Shared made-to-order delivery estimate helpers (used by the site and by email). */
 
-export const DELIVERY_BUSINESS_DAYS = 19;
+export const DELIVERY_BUSINESS_DAYS = 20;
 
 export function addBusinessDays(from: Date, days: number) {
   const d = new Date(from);
